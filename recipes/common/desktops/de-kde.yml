@@ -1,0 +1,9 @@
+type: dnf
+source: local
+group-install:
+  packages:
+    - kde-desktop
+install:
+  packages:
+    - dolphin
+    - plasma-discover
