@@ -14,7 +14,7 @@ if [ -n "$PS1" ]; then
     else
         echo "Starting your shell...."
         echo "cherry-cli" > "$HOME/.config/containerconf/override.conf"
-        exec distrobox-enter cherry-cli
+        exec distrobox-enter cherry-cli -- bash
     fi
 else
     exec /usr/bin/env bash
