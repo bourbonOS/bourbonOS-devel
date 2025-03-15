@@ -12,7 +12,9 @@ Usage: cherry <subcommand> [option]
 Subcommands:
   stem                        baseOS commands
   branch                      containerOS commands
+  pesticide                   FSguard commands
   bootc                       wrapper for bootc
+  status                      check status of baseOS/containerOS
   version                     show program version
   help                        show this dialogue
 EOF
@@ -23,13 +25,14 @@ os-help() {
 Usage: cherry stem [option]
 
 Options:
-  exec                        run a command on the host
-  shell                       open a shell ont he host (/bin/sh)
+  exec                        run a command on the host system
+  shell                       open a shell on the host (/bin/sh)
+  status                      show the status of the host system
   help                        show this dialogue
 EOF
 }
 
-contaienr-help() {
+container-help() {
   cat <<EOF
 Usage: cherry branch [option]
 
@@ -41,11 +44,34 @@ Options:
 EOF
 }
 
+pesticide-help() {
+  cat <<EOF
+Usage: cherry pesticide [option]
+
+Options:
+  status                      show the status of enrolled directories
+  check                       check the integrity of enrolled directories
+  enroll                      enroll a new directory
+  help                        show this dialogue
+EOF
+}
+
 version() {
   echo "cherry v1.2.3-beta"
 }
 
-new() {
+status() {
+  echo "cherryOS version $(cat /etc/cherryos-version)"
+  echo "Pesticide: $(cat /etc/pesticide.d/status)"
+  echo ""
+  echo "Current container: $(cat "$CONTAINER_OVERRIDE_CONFIG")"
+  echo "Available containers:"
+  distrobox-list
+  echo ""
+  bootc status
+}
+
+new_container() {
   read -p "Do you want to (1) choose from a list of images, or (2) specify your own (advanced)? 1/2: " container_new_choice
 
   case "$container_new_choice" in
@@ -70,14 +96,17 @@ new() {
   esac
 }
 
-rm() {
+remove_container() {
   read -p "Are you sure you want to do this? y/n: " rm_confirm
   if [[ "$rm_confirm" == "y" ]]; then
     echo "Input the container to remove."
     echo "Containers:"
     distrobox-list
     read -p "> " container_name_rm
-    if [[ "$container_name_rm" == "cherry-cli" ]]; then echo "You cannot delete the default container!" && exit 1; fi
+    if [[ "$container_name_rm" == "cherry-cli" ]]; then 
+      echo "You cannot delete the default container!" 
+      exit 1
+    fi
     distrobox-rm "$container_name_rm"
   else
     echo "Cancelling."
@@ -85,7 +114,7 @@ rm() {
   fi
 }
 
-switch() {
+switch_container() {
   echo "Input the container to switch to."
   echo "Containers:"
   distrobox-list
@@ -95,59 +124,79 @@ switch() {
   echo "Note that it may take a second for the container to start."
 }
 
-os-exec() {
+os_exec() {
   "$@"
 }
 
-os-shell() {
+os_shell() {
   clear
   echo "You are running a shell on the HOST SYSTEM! Proceed with caution."
   /bin/sh
 }
 
-container-menu() {
-  case "$1" in
-    new)
-      new
-      ;;
-    rm)
-      shift
-      rm "$@"
-      ;;
-    switch)
-      switch
-      ;;
-    *)
-      help
-      exit 1
-      ;;
-  esac
-}
-
-os-menu() {
-  case "$1" in
-    exec)
-      shift
-      os-exec
-      ;;
-    shell)
-      os-shell
-      ;;
-    *)
-      help
-      exit 1
-      ;;
-  esac
-}
-
 case "$1" in
   stem)
     shift
-    os-menu "$@"
+    case "$1" in
+      exec)
+        shift
+        os_exec "$@"
+        ;;
+      shell)
+        os_shell
+        ;;
+      help)
+        os-help
+        ;;
+      *)
+        help
+        exit 1
+        ;;
+    esac
     ;;
   branch)
     shift
-    container-menu "$@"
+    case "$1" in
+      new)
+        new_container
+        ;;
+      rm)
+        shift
+        remove_container "$@"
+        ;;
+      switch)
+        switch_container
+        ;;
+      help)
+        container-help
+        ;;
+      *)
+        help
+        exit 1
+        ;;
+    esac
+    ;;
+  pesticide)
+    shift
+    case "$1" in
+      status)
+        /usr/libexec/pesticide/status
+        ;;
+      check)
+        /usr/libexec/pesticide/check
+        ;;
+      enroll)
+        shift
+        /usr/libexec/pesticide/enroll "$@"
+        ;;
+      help)
+        pesticide-help
+        ;;
+      *)
+        pesticide-help
+        exit 1
+        ;;
+    esac
     ;;
   bootc)
     shift
