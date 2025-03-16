@@ -2,6 +2,4 @@ type: systemd
 system:
   enabled:
     - set-sshell.service
-user:
-  enabled:
-    - open-container.service
+    - pesticide.service
