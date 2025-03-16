@@ -57,18 +57,21 @@ EOF
 }
 
 version() {
-  echo "cherry v1.2.3-beta"
+  echo "cherry v2.0.0-devel"
 }
 
 status() {
-  echo "cherryOS version $(cat /etc/cherryos-version)"
-  echo "Pesticide: $(cat /etc/pesticide.d/status)"
-  echo ""
-  echo "Current container: $(cat "$CONTAINER_OVERRIDE_CONFIG")"
-  echo "Available containers:"
-  distrobox-list
-  echo ""
-  bootc status
+  cat <<EOF
+cherryOS version: $(cat /etc/cherryos-version)
+pesticide: $(/usr/libexec/pesticide/status) $(/usr/libexec/pesticide/version)
+kernver: $(uname -r)
+=======================
+current container: $(cat "$CONTAINER_OVERRIDE_CONFIG")
+containers:
+$(distrobox-list)
+=======================
+$(bootc status)
+EOF
 }
 
 new_container() {
