@@ -3,10 +3,11 @@
 set -oue pipefail
 NIX_FACTORY_INSTALL_PATH="/usr/share/factory/var/nix"
 
-sh -c "$(curl -L https://nixos.org/nix/install)" --daemon --yes
+mkdir -m 0755 /nix
+chown root /nix
+sh <(curl -L https://nixos.org/nix/install) --daemon --yes
 
 mv /nix $NIX_FACTORY_INSTALL_PATH
-mkdir /nix
 rm -f /etc/systemd/system/nix-daemon.{service,socket}
 cp $NIX_FACTORY_INSTALL_PATH/var/nix/profiles/default/lib/systemd/system/nix-daemon.{service,socket} /etc/systemd/system/
 systemctl enable nix-daemon.socket
