@@ -1,7 +1,7 @@
 type: systemd
 system:
   enabled:
-    - semanage.service
+    - semanage-nix.service
     - set-sshell.service
     - pesticide.service
     - nix-daemon.socket
