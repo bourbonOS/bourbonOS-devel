@@ -10,7 +10,6 @@ sh <(curl -L https://nixos.org/nix/install) --daemon --yes
 mkdir -p $NIX_FACTORY_INSTALL_PATH
 mv /nix $NIX_FACTORY_INSTALL_PATH
 rm -f /etc/systemd/system/nix-daemon.{service,socket}
-cp $NIX_FACTORY_INSTALL_PATH/nix/var/nix/profiles/default/lib/systemd/system/nix-daemon.{service,socket} /etc/systemd/system/
 systemctl enable nix-daemon.socket
 
 semanage fcontext -a -t etc_t '/nix/store/[^/]+/etc(/.*)?'

@@ -3,3 +3,4 @@ system:
   enabled:
     - set-sshell.service
     - pesticide.service
+    - nix-daemon.socket
