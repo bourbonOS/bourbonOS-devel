@@ -25,8 +25,8 @@ os-help() {
 Usage: cherry stem [option]
 
 Options:
-  exec                        run a command on the host system
-  upgrade                     upgrade the host system and related utils
+  roots                       run a command on the host system
+  grow                        upgrade the host system and related utils
   status                      show the status of the host system
   help                        show this dialogue
 EOF
@@ -37,9 +37,9 @@ container-help() {
 Usage: cherry branch [option]
 
 Options:
-  new                         create a new container
-  rm                          remove an existing container
-  switch                      switch to a different container
+  grow                        create a new container
+  snap                        remove an existing container
+  jump <container_name>       switch to a different container
   help                        show this dialogue
 EOF
 }
@@ -51,7 +51,7 @@ Usage: cherry pesticide [option]
 Options:
   status                      show the status of enrolled directories
   check                       check the integrity of enrolled directories
-  enroll                      enroll a new directory
+  apply                       enroll a new directory
   help                        show this dialogue
 EOF
 }
@@ -178,11 +178,11 @@ case "$1" in
   stem)
     shift
     case "$1" in
-      exec)
+      roots)
         shift
         os_exec "$@"
         ;;
-      shell)
+      grow)
         os_upgrade
         ;;
       status)
@@ -200,14 +200,14 @@ case "$1" in
   branch)
     shift
     case "$1" in
-      new)
+      grow)
         new_container
         ;;
-      rm)
+      snap)
         shift
         remove_container "$@"
         ;;
-      switch)
+      jump)
         switch_container
         ;;
       help)
@@ -228,7 +228,7 @@ case "$1" in
       check)
         /usr/libexec/pesticide/check
         ;;
-      enroll)
+      apply)
         shift
         /usr/libexec/pesticide/enroll "$@"
         ;;
