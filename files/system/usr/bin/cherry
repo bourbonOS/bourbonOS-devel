@@ -62,7 +62,7 @@ version() {
 
 status() {
   cat <<EOF
-cherryOS $(cat /etc/cherryos-version)
+bourbonOS $(cat /etc/bourbonOS-version)
 pesticide: $(/usr/libexec/pesticide/status) $(/usr/libexec/pesticide/version)
 =======================
 host: $(hostname)
