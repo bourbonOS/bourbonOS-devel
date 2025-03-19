@@ -6,7 +6,7 @@ image-version: stream10
 
 modules:
   - from-file: ingredients/lts/lts-scripts.yml
-  - from-file: ingredients/lts/lts-packages.yml
+  - from-file: ingredients/lts/lts-pkgs.yml
   - from-file: ingredients/common/common-files.yml
   - from-file: ingredients/common/common-services.yml
   - type: signing
