@@ -1,4 +1,4 @@
-type: dnf5
+type: dnf
 source: local
 repos:
   files:

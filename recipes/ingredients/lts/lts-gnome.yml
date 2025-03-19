@@ -1,6 +1,6 @@
 modules:
-  - type: dnf4
-    source: local
+  - type: dnf
+    source: https://github.com/certifiedfoolio/dnf4-module
     group-install:
       packages:
       - gnome-desktop

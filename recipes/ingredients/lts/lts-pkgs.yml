@@ -1,5 +1,5 @@
-type: dnf4
-source: local
+type: dnf
+source: https://github.com/certifiedfoolio/dnf4-module
 install:
   packages:
     - didyoumean
