@@ -1,0 +1,17 @@
+polkit.addRule(function(action, subject) {
+    if (action.id == "org.freedesktop.policykit.exec" &&
+        action.lookup("program") == "/usr/bin/nix" &&
+        (action.lookup("command_line").indexOf("nix-build") != -1 ||
+         action.lookup("command_line").indexOf("nix-channel") != -1 ||
+         action.lookup("command_line").indexOf("nix-collect-garbage") != -1 ||
+         action.lookup("command_line").indexOf("nix-copy-closure") != -1 ||
+         action.lookup("command_line").indexOf("nix-env") != -1 ||
+         action.lookup("command_line").indexOf("nix-hash") != -1 ||
+         action.lookup("command_line").indexOf("nix-instantiate") != -1 ||
+         action.lookup("command_line").indexOf("nix-prefetch-url") != -1 ||
+         action.lookup("command_line").indexOf("nix-shell") != -1 ||
+         action.lookup("command_line").indexOf("nix-store") != -1 ||
+         action.lookup("command_line").indexOf("nix") != -1)) {
+        return polkit.Result.YES;
+    }
+});

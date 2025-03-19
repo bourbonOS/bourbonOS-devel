@@ -1,5 +1,5 @@
 modules:
-  - type: dnf
+  - type: dnf4
     source: local
     group-install:
       packages:

@@ -1,4 +1,4 @@
-type: dnf
+type: dnf4
 source: local
 install:
   packages:

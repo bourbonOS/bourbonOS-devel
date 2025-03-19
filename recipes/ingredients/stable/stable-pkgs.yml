@@ -1,0 +1,18 @@
+type: dnf5
+source: local
+repos:
+  files:
+    - https://copr.fedorainfracloud.org/coprs/chronos/cherries/repo/fedora-%OS_VERSION%/chronos-cherries-fedora-%OS_VERSION%.repo
+install:
+  packages:
+    - didyoumean
+    - atuin
+    - util-linux
+    - topgrade
+    - distrobox
+    - firefox
+remove:
+  packages:
+    - toolbox
+    - sudo
+    - sudo-python-plugin
