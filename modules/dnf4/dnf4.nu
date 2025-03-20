@@ -119,7 +119,7 @@ def enable_rpmfusion []: nothing -> nothing {
 
   print $"(ansi green)Enabling '(ansi cyan)($CISCO_REPO)(ansi green)' repo for RPMFusion compatibility(ansi reset)"
   try {
-    ^dnf config-manager --setopt $'($CISCO_REPO).enabled=1'
+    ^dnf config-manager --setopt $'($CISCO_REPO).enabled=1 --save'
   } catch {
     exit 1
   }
@@ -189,7 +189,7 @@ def enable_negativo []: nothing -> nothing {
     }
     | flatten
     | try {
-      ^dnf -y config-manager --setopt ...($in)
+      ^dnf -y config-manager --setopt ...($in) --save
     } catch {
       exit 1
     }
@@ -283,7 +283,7 @@ def add_repos [$repos: list]: nothing -> list<string> {
       $'($in).enabled=1'
     }
     | try {
-      ^dnf -y config-manager --setopt ...($in)
+      ^dnf -y config-manager --setopt ...($in) --save
     } catch {
       exit 1
     }
@@ -589,9 +589,9 @@ def weak_arg []: record -> string {
     | default true install-weak-deps
 
   if $install.install-weak-deps {
-    '--setopt=install_weak_deps=True'
+    '--setopt install_weak_deps=True --save'
   } else {
-    '--setopt=install_weak_deps=False'
+    '--setopt install_weak_deps=False --save'
   }
 }
 
