@@ -589,9 +589,9 @@ def weak_arg []: record -> string {
     | default true install-weak-deps
 
   if $install.install-weak-deps {
-    '--setopt=install_weak_deps=True --save'
+    '--setopt=install_weak_deps=True'
   } else {
-    '--setopt=install_weak_deps=False --save'
+    '--setopt=install_weak_deps=False'
   }
 }
 
