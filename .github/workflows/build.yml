@@ -32,8 +32,6 @@ jobs:
           - images/cherry-base-stable.yml
           - images/cherry-gnome-lts.yml
           - images/cherry-gnome-stable.yml
-          - images/cherry-kde-lts.yml
-          - images/cherry-kde-stable.yml
     steps:
       # the build is fully handled by the reusable github action
       - name: Build baseOS
