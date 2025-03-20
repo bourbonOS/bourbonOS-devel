@@ -1,6 +1,6 @@
 modules:
-  - type: dnf
-    source: ghcr.io/certifiedfoolio/modules
+  - type: dnf4
+    source: local
     group-install:
       packages:
         - kde-desktop

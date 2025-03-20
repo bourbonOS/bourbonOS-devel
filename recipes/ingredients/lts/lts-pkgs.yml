@@ -1,5 +1,5 @@
 type: dnf4
-source: ghcr.io/certifiedfoolio/modules
+source: local
 repos:
   files:
     - https://copr.fedorainfracloud.org/coprs/chronos/cherries/repo/epel-%OS_VERSION%/chronos-cherries-epel-%OS_VERSION%.repo
@@ -16,3 +16,4 @@ remove:
     - toolbox
     - sudo
     - sudo-python-plugin
+https://google.com
