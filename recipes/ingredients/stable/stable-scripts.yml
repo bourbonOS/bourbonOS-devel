@@ -3,4 +3,5 @@ scripts:
   - unprotectsudo.sh
   - add-exec-perms.sh
   - add-image-info.sh
+  - dnf-plugin.sh
   - install-nix.sh
