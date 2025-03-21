@@ -2,4 +2,4 @@
 
 set -oue pipefail
 
-dnf5 -y install dnf-command(config-manager)
+dnf5 -y install 'dnf-command(config-manager)'
