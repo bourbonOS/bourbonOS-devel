@@ -4,4 +4,3 @@ scripts:
   - add-exec-perms.sh
   - add-image-info.sh
   - dnf5-plugin.sh
-  - install-nix.sh
