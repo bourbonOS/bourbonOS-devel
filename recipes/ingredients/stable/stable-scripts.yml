@@ -3,4 +3,4 @@ scripts:
   - unprotectsudo.sh
   - add-exec-perms.sh
   - add-image-info.sh
-  - dnf5-plugin.sh
+  - dnf5-fix.sh
