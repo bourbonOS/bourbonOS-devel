@@ -12,7 +12,7 @@ hash_dirs() {
     done < "$1"
 }
 
-if [ ! -f "/etc/pesticide/pesticide.conf" ]; then
+if [ ! -f "/etc/pesticide.d/pesticide.conf" ]; then
     echo "Configuration file does not exist."
     exit 1
 elif [ "$current_deployment" != "$previous_deployment" ]; then
