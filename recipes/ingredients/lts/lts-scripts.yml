@@ -2,5 +2,4 @@ type: script
 scripts:
   - unprotectsudo.sh
   - add-exec-perms.sh
-  - image-info-lts.sh
   - repo-setup-lts.sh
