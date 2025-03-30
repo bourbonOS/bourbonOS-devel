@@ -12,5 +12,5 @@ if [ "$-" == *i* ]; then
         exec distrobox-enter cherry-cli -- bash
     fi
 else
-    exec /bin/bash
+    exec /usr/bin/env bash
 fi
