@@ -1,21 +1,37 @@
 #!/bin/bash
 
-current_deployment=$(ostree admin status | grep '⟳' | head -n 1)
-previous_deployment=$(ostree admin status | grep '⟳' | tail -n 1)
-
 hash_dirs() {
-    while IFS= read -r line; do
-        [[ "$line" =~ ^#.*$ ]] && continue
-        find "$line" -type f -print0 | sort -z | while IFS= read -r -d '' file; do
-            sha256sum "$file"
-        done | sha256sum
-    done < "$1"
+    if [[ ! -f $1 ]]; then
+        echo "Creating hashfile $1"
+        touch $1
+        echo "Created hashfile $1"
+    else
+        while IFS= read -r line; do
+            [[ "$line" =~ ^#.*$ ]] && continue
+            find "$line" -type f -print0 | sort -z | while IFS= read -r -d '' file; do
+                sha256sum "$file"
+            done | sha256sum
+        done < "$1"
+    fi
+}
+
+deployment_status() {
+    if [[ ! -f /etc/pesticide.d/deployment.hash ]]; then
+        touch /etc/pesticide.d/deployment.hash
+        echo "$(bootc status | sha256sum)" > /etc/pesticide.d/deployment.hash
+    else
+        if [[ "$(bootc status | sha256sum)" != "$(cat /etc/pesticide.d/deployment.hash)" ]]; then
+            echo "1"
+        else
+            echo "0"
+        fi
+    fi
 }
 
 if [ ! -f "/etc/pesticide.d/pesticide.conf" ]; then
     echo "Configuration file does not exist."
     exit 1
-elif [ "$current_deployment" != "$previous_deployment" ]; then
+elif [ "$(deployment_status)" != "0" ]; then
     echo "An update has been applied. Regenerating hashes..."
     if [ -f "/etc/pesticide.d/dirs.hash" ]; then
         rm /etc/pesticide.d/dirs.hash
