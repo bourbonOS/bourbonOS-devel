@@ -13,5 +13,5 @@ if [[ "$-" == *i* && -d /var/home/$USER ]]; then
         exec distrobox-enter cherry-cli -- bash
     fi
 else
-    exec /bin/bash $@
+    /bin/bash $@
 fi
