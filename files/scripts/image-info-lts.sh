@@ -13,16 +13,16 @@ set -oue pipefail
 # BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language
 # governing permissions and limitations under the License.
 
-IMAGE_PRETTY_NAME="bourbonOS"
-IMAGE_LIKE="fedora"
-HOME_URL="https://github.com/cherry-os/bourbonOS"
-DOCUMENTATION_URL="https://github.com/cherry-os/bourbonOS"
-SUPPORT_URL="https://github.com/cherry-os/bourbonOS/issues"
-BUG_SUPPORT_URL="https://github.com/cherry-os/bourbonOS/issues"
+IMAGE_PRETTY_NAME="bourbonOS $(cat /etc/cherryos-version)"
+IMAGE_LIKE="centos"
+HOME_URL="https://github.com/bourbonOS/bourbonOS-devel"
+DOCUMENTATION_URL="https://github.com/bourbonOS/bourbonOS-devel"
+SUPPORT_URL="https://github.com/bourbonOS/bourbonOS-devel/issues"
+BUG_SUPPORT_URL="https://github.com/bourbonOS/bourbonOS-devel/issues"
 
 # OS Release File
 sed -i "s/^VARIANT_ID=.*/VARIANT_ID=$IMAGE_NAME/" /usr/lib/os-release
-sed -i "s/^PRETTY_NAME=.*/PRETTY_NAME=\"${IMAGE_PRETTY_NAME} (powered by Fedora Atomic)\"/" /usr/lib/os-release
+sed -i "s/^PRETTY_NAME=.*/PRETTY_NAME=\"${IMAGE_PRETTY_NAME} (powered by CentOS Stream)\"/" /usr/lib/os-release
 sed -i "s/^NAME=.*/NAME=\"$IMAGE_PRETTY_NAME\"/" /usr/lib/os-release
 sed -i "s|^HOME_URL=.*|HOME_URL=\"$HOME_URL\"|" /usr/lib/os-release
 sed -i "s|^DOCUMENTATION_URL=.*|DOCUMENTATION_URL=\"$DOCUMENTATION_URL\"|" /usr/lib/os-release

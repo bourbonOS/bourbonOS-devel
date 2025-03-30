@@ -10,8 +10,9 @@ if [[ -n $TERM && "$TERM" != "dumb" && -d /var/home/$USER ]]; then
         exec distrobox-assemble create --file /etc/containerconf/configs.d/.cherry/cherry.ini
     else
         echo "Starting your shell...."
-        exec distrobox-enter cherry-cli -- bash
+        exec distrobox-enter cherry-cli
     fi
 else
-    /bin/bash $@
+    # Nothing to do!
+    return
 fi
