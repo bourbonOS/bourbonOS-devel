@@ -7,10 +7,11 @@ if [[ "$-" == *i* && -d /var/home/$USER ]]; then
         echo "Don't worry! This wont take long."
         echo "The shell will open when we are done."
         exec distrobox-assemble create --file /etc/containerconf/configs.d/.cherry/cherry.ini
+        mkdir -p $HOME/.config/containerconf
     else
         echo "Starting your shell...."
         exec distrobox-enter cherry-cli -- bash
     fi
 else
-    exec /usr/bin/env bash
+    exec /bin/bash $@
 fi
