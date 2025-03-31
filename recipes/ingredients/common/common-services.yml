@@ -1,5 +1,4 @@
 type: systemd
 system:
   enabled:
-    - set-sshell.service
     - pesticide.service
