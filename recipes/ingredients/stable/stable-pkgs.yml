@@ -1,5 +1,8 @@
 type: dnf
 source: local
+repos:
+  files:
+    - bourbon-os-stable.repo
 install:
   packages:
     - didyoumean

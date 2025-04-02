@@ -1,4 +1,3 @@
 type: script
 scripts:
   - unprotectsudo.sh
-  - dnf5-fix.sh

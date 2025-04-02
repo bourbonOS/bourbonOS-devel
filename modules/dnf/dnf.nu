@@ -4,6 +4,15 @@ const NEGATIVO = 'negativo17'
 const NEGATIVO_URL = 'https://negativo17.org/repos/fedora-negativo17.repo'
 const RPMFUSION = 'rpmfusion'
 
+# Handles installing necessary plugins for repo management.
+def check_dnf5_plugins []: nothing -> nothing {
+  if (^rpm -q dnf5-plugins | complete).exit_code != 0 {
+    print $'(ansi yellow1)Required dnf5 plugins are not installed. Installing plugins(ansi reset)'
+
+    install_pkgs { packages: [dnf5-plugins] }
+  }
+}
+
 # Handle adding/removing repo files and COPR repos.
 # 
 # This command returns an object containing the repos
@@ -75,6 +84,8 @@ def repos [$repos: record]: nothing -> record {
 
 # Setup nonfree repos for rpmfusion or negativo17-multimedia.
 def nonfree_repos [repo_type?: string]: nothing -> list<string> {
+  check_dnf5_plugins
+
   match $repo_type {
     $repo if $repo == $RPMFUSION => {
       disable_negativo
@@ -207,6 +218,8 @@ def disable_negativo []: nothing -> nothing {
 #
 # Returns a list of IDs of the repos added
 def add_repos [$repos: list]: nothing -> list<string> {
+  check_dnf5_plugins
+
   if ($repos | is-not-empty) {
     print $'(ansi green)Adding repositories:(ansi reset)'
 
@@ -341,6 +354,8 @@ def check_copr []: string -> string {
 #
 # This will error if a COPR repo ID is invalid.
 def add_coprs [$copr_repos: list]: nothing -> list<string> {
+  check_dnf5_plugins
+
   if ($copr_repos | is-not-empty) {
     print $'(ansi green)Adding COPR repositories:(ansi reset)'
     $copr_repos
@@ -364,6 +379,8 @@ def add_coprs [$copr_repos: list]: nothing -> list<string> {
 #
 # This will error if a COPR repo ID is invalid.
 def disable_coprs [$copr_repos: list]: nothing -> nothing {
+  check_dnf5_plugins
+
   if ($copr_repos | is-not-empty) {
     print $'(ansi green)Adding COPR repositories:(ansi reset)'
     $copr_repos
@@ -386,9 +403,17 @@ def disable_coprs [$copr_repos: list]: nothing -> nothing {
 def add_keys [$keys: list]: nothing -> nothing {
   if ($keys | is-not-empty) {
     print $'(ansi green)Adding keys:(ansi reset)'
-    $keys
-      | each {
-        print $'- (ansi cyan)($in)(ansi reset)'
+    let keys = $keys
+      | str replace --all '%OS_VERSION%' $env.OS_VERSION
+      | str trim
+      | each {|key|
+        let key = if ($key | str starts-with 'https://') or ($key | str starts-with 'http://') {
+          $key
+        } else {
+          [$env.CONFIG_DIRECTORY dnf $key] | path join
+        }
+        print $'- (ansi cyan)($key)(ansi reset)'
+        $key
       }
 
     for $key in $keys {
@@ -556,8 +581,23 @@ def remove_pkgs [remove: record]: nothing -> nothing {
 }
 
 # Build up args to use on `dnf`
-def install_args [...filter: string]: record -> list<string> {
+def install_args [
+  --global-config: record
+  ...filter: string
+]: record -> list<string> {
   let install = $in
+    | default (
+      $global_config.skip-unavailable?
+        | default false
+    ) skip-unavailable
+    | default (
+      $global_config.skip-broken?
+        | default false
+    ) skip-broken
+    | default (
+      $global_config.allow-erasing?
+        | default false
+    ) allow-erasing
   mut args = []
   let check_filter = {|arg|
     let arg_exists = ($arg in $install)
@@ -584,9 +624,14 @@ def install_args [...filter: string]: record -> list<string> {
 }
 
 # Generate a weak deps argument
-def weak_arg []: record -> string {
+def weak_arg [
+  --global-config: record
+]: record -> string {
   let install =
-    | default true install-weak-deps
+    | default (
+      $global_config.install-weak-deps?
+        | default true
+    ) install-weak-deps
 
   if $install.install-weak-deps {
     '--setopt=install_weak_deps=True'
@@ -691,11 +736,11 @@ def install_pkgs [install: record]: nothing -> nothing {
     try {
       (^dnf5
         -y
-        ($repo_install | weak_arg)
+        ($repo_install | weak_arg --global-config $install)
         install
         --repoid
         $repo
-        ...($repo_install | install_args)
+        ...($repo_install | install_args --global-config $install)
         ...($packages))
     } catch {
       exit 1
