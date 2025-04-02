@@ -5,7 +5,6 @@ repos:
     - bourbon-os-lts.repo
 install:
   packages:
-    - didyoumean
     - atuin
     - util-linux
     - topgrade
