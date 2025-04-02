@@ -8,6 +8,7 @@ install:
     - topgrade
     - distrobox
     - firefox
+    - ostools
 remove:
   packages:
     - toolbox
