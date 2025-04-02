@@ -8,7 +8,9 @@ install:
     - topgrade
     - distrobox
     - firefox
-    - ostools
+    - ostools-cherry
+    - ostools-synergy
+    - ostools-pesticide
 remove:
   packages:
     - toolbox
