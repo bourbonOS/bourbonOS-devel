@@ -2,3 +2,6 @@ type: systemd
 system:
   enabled:
     - pesticide.service
+    - move-nix.service
+    - nix-daemon.socket
+    - semanage-nix.service

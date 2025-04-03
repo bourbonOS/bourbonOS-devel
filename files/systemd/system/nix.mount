@@ -1,10 +1,10 @@
 [Unit]
-Description=Mount .fhs-noncompliant/nix to /nix
+Description=Mount /nix
 After=ostree-remount.service
-BindsTo=usr.mount
+BindsTo=var.mount
 
 [Mount]
-What=/usr/share/fhs-noncompliant/nix
+What=/var/usrlocal/nix
 Where=/nix
 Type=none
 Options=bind
