@@ -5,7 +5,7 @@ BindsTo=nix.mount
 
 [Service]
 Type=oneshot
-ExecStart=/bin/bash -c "for i in "etc_t '/nix/store/[^/]+/etc(/.*)?'" "lib_t '/nix/store/[^/]+/lib(/.*)?'" "systemd_unit_file_t '/nix/store/[^/]+/lib/systemd/system(/.*)?'" "man_t '/nix/store/[^/]+/man(/.*)?'" "bin_t '/nix/store/[^/]+/s?bin(/.*)?'" "usr_t '/nix/store/[^/]+/share(/.*)?'" "var_run_t '/nix/var/nix/daemon-socket(/.*)?'" "usr_t '/nix/var/nix/profiles(/per-user/[^/]+)?/[^/]+'" "etc_t '/var/usrlocal/nix/store/[^/]+/etc(/.*)?'" "lib_t '/var/usrlocal/nix/store/[^/]+/lib(/.*)?'" "systemd_unit_file_t '/var/usrlocal/nix/store/[^/]+/lib/systemd/system(/.*)?'" "man_t '/var/usrlocal/nix/store/[^/]+/man(/.*)?'" "bin_t '/var/usrlocal/nix/store/[^/]+/s?bin(/.*)?'" "usr_t '/var/usrlocal/nix/store/[^/]+/share(/.*)?'" "var_run_t '/var/usrlocal/nix/var/nix/daemon-socket(/.*)?'" "usr_t '/var/usrlocal/nix/var/nix/profiles(/per-user/[^/]+)?/[^/]+'"; do semanage fcontext -a -t "$(echo "$i" | awk '{print $1}')" "$(echo "$i" | awk '{print $2}')"; done"
+ExecStart=/bin/bash -c "for i in "etc_t '/nix/store/[^/]+/etc(/.*)?'" "lib_t '/nix/store/[^/]+/lib(/.*)?'" "systemd_unit_file_t '/nix/store/[^/]+/lib/systemd/system(/.*)?'" "man_t '/nix/store/[^/]+/man(/.*)?'" "bin_t '/nix/store/[^/]+/s?bin(/.*)?'" "usr_t '/nix/store/[^/]+/share(/.*)?'" "var_run_t '/nix/var/nix/daemon-socket(/.*)?'" "usr_t '/nix/var/nix/profiles(/per-user/[^/]+)?/[^/]+'"; do semanage fcontext -a -t "$(echo "$i" | awk '{print $1}')" "$(echo "$i" | awk '{print $2}')"; done"
 ExecStartPost=/bin/systemctl disable --now semanage-nix.service
 
 [Install]
