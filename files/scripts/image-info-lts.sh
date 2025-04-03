@@ -13,7 +13,7 @@ set -oue pipefail
 # BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language
 # governing permissions and limitations under the License.
 
-IMAGE_PRETTY_NAME="bourbonOS $(cat /etc/cherryos-version)"
+IMAGE_PRETTY_NAME="bourbonOS $(cat /etc/bourbonOS-version)"
 IMAGE_LIKE="centos"
 HOME_URL="https://github.com/bourbonOS/bourbonOS-devel"
 DOCUMENTATION_URL="https://github.com/bourbonOS/bourbonOS-devel"
