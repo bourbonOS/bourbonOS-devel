@@ -13,6 +13,9 @@ install:
     - ostools-cherry
     - ostools-synergy
     - ostools-pesticide
+    - iwlwifi-mvm-firmware
+    - iwlwifi-dvm-firmware
+    - iwlegacy-firmware
 remove:
   packages:
     - toolbox
