@@ -43,7 +43,8 @@ format_image() {
 
 loop_mount_image() {
   echo "Loop mounting ${IMAGE_FILE} to ${MOUNT_POINT}"
-  mount -o loop "${IMAGE_FILE}" "${MOUNT_POINT}"
+  losetup /dev/loop0 /nix-mount.imgfs
+  mount /dev/loop0 "${MOUNT_POINT}"
   if [ $? -ne 0 ]; then
     echo "Error loop mounting ${IMAGE_FILE} to ${MOUNT_POINT}"
     exit 1
