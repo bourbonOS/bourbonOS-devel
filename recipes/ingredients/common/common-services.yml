@@ -4,3 +4,4 @@ system:
     - pesticide.service
     - nix-daemon.socket
     - semanage-nix.service
+    - nix-dir-move.service
