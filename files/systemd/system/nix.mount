@@ -1,0 +1,12 @@
+[Unit]
+Description=Mount nix imgfs to /nix
+DefaultDependencies=no
+Before=sockets.target
+After=ostree-remount.service
+BindsTo=var.mount
+
+[Mount]
+What=/var/usrlocal/nix-mount.imgfs
+Where=/nix
+Type=ext4
+Options=loop
