@@ -5,4 +5,4 @@ system:
     - nix-daemon.socket
     - semanage-nix.service
     - nix-dir-move.service
-    - nix-usr-rw.service
+    - nix-user-rw.service
