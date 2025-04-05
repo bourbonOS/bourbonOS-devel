@@ -1,0 +1,14 @@
+[Unit]
+Description=Give users access to /nix
+After=nix.mount
+BindsTo=nix.mount
+
+[Service]
+Type=oneshot
+ExecStart=/usr/libexec/.nix-usr-check-is-rw
+StandardOutput=tty
+StandardError=tty
+TTYPath=/dev/console
+
+[Install]
+WantedBy=multi-user.target
