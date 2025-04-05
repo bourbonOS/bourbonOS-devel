@@ -1,6 +1,6 @@
 #!/bin/bash
 
-if [[ "$TERM" != "xterm-256color" && -d /var/home/$USER ]]; then
+if [[ "$TERM" == "xterm-256color" && -d /var/home/$USER ]]; then
     if [ ! -d "$HOME/.config/containerconf" ]; then
         echo "Hello there! Welcome to bourbonOS!"
         echo "For you to access your shell, we need to set up the default container."
