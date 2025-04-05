@@ -8,6 +8,7 @@ if ! getent group "$GROUP_NAME" > /dev/null 2>&1; then
     groupadd "$GROUP_NAME"
     chown -R :"$GROUP_NAME" "$TARGET_DIR"
     chmod -R g+rwx "$TARGET_DIR"
+    usermod -aG "$GROUP_NAME" root
 else
     echo "Group $GROUP_NAME already exists. Skipping group creation."
 fi
@@ -19,7 +20,7 @@ for USER_DIR in /var/home/*; do
             echo "$USERNAME is already in group $GROUP_NAME. Skipping."
         else
             echo "Adding $USERNAME to group $GROUP_NAME..."
-            sudo usermod -aG "$GROUP_NAME" "$USERNAME"
+            usermod -aG "$GROUP_NAME" "$USERNAME"
         fi
     fi
 done
