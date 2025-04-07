@@ -1,8 +1,8 @@
 polkit.addRule(function(action, subject) {
-    if (action.id == "org.freedesktop.policykit.exec" &&
-        action.lookup("program") == "/usr/bin/bootc" &&
-        (action.lookup("command_line").indexOf("upgrade") != -1 ||
-         action.lookup("command_line").indexOf("status") != -1)) {
+    if (action.id === "org.freedesktop.policykit.exec" && 
+        action.lookup("command") === "/usr/bin/bootc" && 
+        action.lookup("args") && 
+        (action.lookup("args")[0] === "status" || action.lookup("args")[0] === "upgrade")) {
         return polkit.Result.YES;
     }
 });
