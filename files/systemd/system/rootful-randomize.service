@@ -1,0 +1,8 @@
+[Unit]
+Description=Manage root user password
+
+[Service]
+Type=oneshot
+ExecStart=/bin/bash -c "head -c 32 /dev/urandom | tr -dc 'a-zA-Z0-9[:punct:]' | head -c 16 | passwd root"
+User=root
+Group=root

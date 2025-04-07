@@ -1,0 +1,10 @@
+[Unit]
+Description=Run rootful-randomize.service
+
+[Timer]
+OnBootSec=0
+OnUnitActiveSec=5min
+Unit=rootful-randomize.service
+
+[Install]
+WantedBy=timers.target

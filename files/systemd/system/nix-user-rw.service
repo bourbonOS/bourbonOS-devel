@@ -5,7 +5,7 @@ BindsTo=nix.mount
 
 [Service]
 Type=oneshot
-ExecStart=/usr/libexec/.nix-usr-check-is-rw
+ExecStart=/usr/libexec/.nix-usr-check-is-rw/rw-access.sh
 StandardOutput=tty
 StandardError=tty
 TTYPath=/dev/console
