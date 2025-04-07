@@ -2,4 +2,3 @@ type: script
 scripts:
   - unprotectsudo.sh
   - install-nix.sh
-  - remove-wheel.sh
