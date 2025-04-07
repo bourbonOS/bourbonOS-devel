@@ -10,6 +10,7 @@ install:
     - topgrade
     - distrobox
     - firefox
+    - rsync
     - ostools-cherry
     - ostools-synergy
     - ostools-pesticide
