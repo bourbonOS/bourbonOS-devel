@@ -1,0 +1,9 @@
+type: dnf
+source: local
+group-install:
+  packages:
+    - budgie-desktop
+    - budgie-desktop-apps
+install:
+  packages:
+    - slick-greeter
