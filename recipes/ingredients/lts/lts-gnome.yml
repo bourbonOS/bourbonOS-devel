@@ -7,3 +7,6 @@ install:
   packages:
     - nautilus
     - gnome-software
+remove:
+  packages:
+    - gnome-system-monitor
