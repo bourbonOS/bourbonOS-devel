@@ -6,9 +6,6 @@ BindsTo=nix.mount
 [Service]
 Type=oneshot
 ExecStart=/usr/libexec/.internals-ostools/rw-access.sh
-StandardOutput=tty
-StandardError=tty
-TTYPath=/dev/console
 
 [Install]
 WantedBy=multi-user.target

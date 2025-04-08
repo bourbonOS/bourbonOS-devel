@@ -1,8 +1,0 @@
-polkit.addRule(function(action, subject) {
-    if (action.id == "org.freedesktop.policykit.exec" &&
-        action.lookup("program") == "/usr/bin/cherry" &&
-        action.lookup("arg0") == "baseos" &&
-        action.lookup("arg1") == "root-enable") {
-      return polkit.Result.YES;
-    }
-});

@@ -1,8 +1,0 @@
-[Unit]
-Description=Manage root user password
-
-[Service]
-Type=oneshot
-ExecStart=/usr/libexec/.internals-ostools/change-root-pw.sh
-User=root
-Group=root

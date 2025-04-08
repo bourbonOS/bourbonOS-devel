@@ -1,8 +1,8 @@
 [Unit]
 Description=Move nix dir to usrlocal
 ConditionPathExists=/etc/.nix-mount-temp/nix
-Before=nix.mount
 After=var.mount etc.mount
+BindsTo=var.mount etc.mount
 
 [Service]
 Type=oneshot

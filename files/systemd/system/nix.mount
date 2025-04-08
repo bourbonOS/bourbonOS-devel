@@ -1,8 +1,8 @@
 [Unit]
 Description=Mount /nix
 DefaultDependencies=no
-After=var.mount ostree-remount.service
-BindsTo=var.mount
+After=var.mount ostree-remount.service nix-dir-move.service
+BindsTo=var.mount nix-dir-move.service
 
 [Mount]
 What=/var/usrlocal/nix

@@ -6,4 +6,3 @@ system:
     - semanage-nix.service
     - nix-dir-move.service
     - nix-user-rw.service
-    - rootful-randomize.timer
