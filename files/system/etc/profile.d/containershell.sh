@@ -3,16 +3,18 @@
 if [[ -d /var/home/$USER ]]; then
     if [[ "$TERM" == "xterm-256color" ]]; then
         if [[ ! -d "$HOME/.config/containerconf" ]]; then
+            clear
             echo "Hello there! Welcome to bourbonOS!"
             if getent group wheel > /dev/null 2>&1; then
                 echo "Please set your root password."
                 echo "Be careful to not lose this password, otherwise"
                 echo "you will lose root access entirely."
-                run0 passwd root
+                sleep 3
+                pkexec passwd root
                 grep "^wheel:" /etc/group | cut -d':' -f4 | while IFS=',' read -r user; do
-                    sudo gpasswd --delete "$user" wheel
+                    gpasswd --delete "$user" wheel
                 done
-                sudo groupdel wheel
+                groupdel wheel
             fi
             echo "Now, for you to access your shell, we need to set up the default container."
             echo "Don't worry! This wont take long."
