@@ -7,4 +7,3 @@ system:
     - nix-dir-move.service
     - nix-user-rw.service
     - homefs-setup.service
-    - fix-lightdm-shadow.service
