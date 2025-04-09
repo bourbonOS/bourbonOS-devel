@@ -16,3 +16,6 @@ system:
     - page.tesk.Refine
     - com.raggesilver.BlackBox
     - com.github.tchx84.Flatseal
+    - com.mattjakeman.ExtensionManager
+user:
+  repo-name: flathub

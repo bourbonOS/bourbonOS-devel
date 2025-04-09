@@ -11,6 +11,8 @@ install:
     - distrobox
     - firefox
     - rsync
+    - unzip
+    - alsa-sof-firmware
     - iwlwifi-mvm-firmware
     - iwlwifi-dvm-firmware
     - iwlegacy-firmware

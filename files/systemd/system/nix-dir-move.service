@@ -6,8 +6,7 @@ BindsTo=var.mount etc.mount
 
 [Service]
 Type=oneshot
-ExecStart=/bin/bash -c "mv /etc/.nix-mount-temp/nix /var/usrlocal && rmdir /etc/.nix-mount-temp"
-ExecStartPost=/usr/bin/systemctl disable nix-dir-move.service
+ExecStart=/usr/libexec/.internals-ostools/move-nix.sh
 
 [Install]
 WantedBy=multi-user.target
