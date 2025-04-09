@@ -6,5 +6,5 @@ system:
     - semanage-nix.service
     - nix-dir-move.service
     - nix-user-rw.service
-    - homefs.service
+    - homefs-setup.service
     - fix-lightdm-shadow.service
