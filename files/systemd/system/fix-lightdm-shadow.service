@@ -1,0 +1,13 @@
+[Unit]
+Description=Fix /etc/shadow for lightdm
+Before=lightdm.service
+After=usr.mount etc.mount
+BindsTo=usr.mount etc.mount
+
+[Service]
+Type=oneshot
+ExecStart=/bin/bash -c "cat /usr/etc/shadow | grep lightdm >> /etc/shadow"
+ExecStartPost=/usr/bin/systemctl disable fix-lightdm-shadow.service
+
+[Install]
+WantedBy=multi-user.target
