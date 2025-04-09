@@ -2,8 +2,6 @@
 Description=Fix /etc/shadow for lightdm
 DefaultDependencies=no
 Before=display-manager.service
-After=usr.mount etc.mount
-BindsTo=usr.mount etc.mount
 
 [Service]
 Type=oneshot
