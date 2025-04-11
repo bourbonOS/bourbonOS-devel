@@ -28,7 +28,8 @@ do
     if [ -d "$USER_DIR" ]; then
         USERNAME=$(basename "$USER_DIR")
         chown "$USERNAME:$USERNAME" "$USER_DIR"
-        chmod 700 "$USER_DIR"
+        chmod 700 $USER_DIR
+        restorecon -Rv $USER_DIR
     fi
 done
 touch /etc/.homefs.setup-is-done
