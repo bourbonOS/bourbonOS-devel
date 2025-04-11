@@ -1,6 +1,6 @@
 [Unit]
 Description=Move nix dir to usrlocal
-ConditionPathExists=/etc/nix.img
+ConditionPathExists=/etc/.nix-mount-temp/nix
 After=var.mount etc.mount
 BindsTo=var.mount etc.mount
 
