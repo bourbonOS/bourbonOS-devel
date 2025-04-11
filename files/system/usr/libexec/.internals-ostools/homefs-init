@@ -1,5 +1,9 @@
 #!/bin/bash
 
+if [[ -f /etc/.homefs.setup-is-done ]]; then
+    exit 0
+fi
+
 PASSWORD=$(openssl rand -base64 48)
 
 mkdir -p /tmp/homefs-init
@@ -27,3 +31,4 @@ do
         chmod 700 "$USER_DIR"
     fi
 done
+touch /etc/.homefs.setup-is-done
