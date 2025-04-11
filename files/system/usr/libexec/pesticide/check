@@ -45,40 +45,33 @@ main() {
     local setup_lock="/etc/pesticide.d/setup_is_done.lock"
     local temp_hash="/tmp/hash.tmp"
 
-    if [[ ! -f "$config_file" ]]; then
-        echo "Configuration file does not exist."
-        exit 1
-    fi
-
-    if [[ "$(deployment_status)" != "0" ]]; then
-        echo "An update has been applied. Regenerating hashes..."
-        [[ -f "$dirs_hash" ]] && rm "$dirs_hash"
-        hash_dirs "$dirs_hash"
-        echo "STATUS=OK" > "$status_file"
-        echo "Hashes regenerated."
-        exit 0
-    fi
-
     if [[ ! -f "$setup_lock" ]]; then
         echo "First run detected, creating hashes..."
         hash_dirs "$dirs_hash"
         touch "$setup_lock"
         exit 0
-    fi
-
-    if [[ -f "$setup_lock" ]]; then
-        echo "Checking hashes..."
-        hash_dirs "$temp_hash"
-        if diff "$temp_hash" "$dirs_hash" > /dev/null; then
-            echo "STATUS=OK"
+    else
+        if [[ "$(deployment_status)" != "0" ]]; then
+            echo "An update has been applied. Regenerating hashes..."
+            [[ -f "$dirs_hash" ]] && rm "$dirs_hash"
+            hash_dirs "$dirs_hash"
             echo "STATUS=OK" > "$status_file"
-            rm "$temp_hash"
+            echo "Hashes regenerated."
             exit 0
-        else
-            echo "STATUS=TAINTED"
-            echo "STATUS=TAINTED" > "$status_file"
-            rm "$temp_hash"
-            exit 1
+        elif [[ -f "$setup_lock" ]]; then
+            echo "Checking hashes..."
+            hash_dirs "$temp_hash"
+            if diff "$temp_hash" "$dirs_hash" > /dev/null; then
+                echo "OK"
+                echo "STATUS=OK" > "$status_file"
+                rm "$temp_hash"
+                exit 0
+            else
+                echo "TAINTED"
+                echo "STATUS=TAINTED" > "$status_file"
+                rm "$temp_hash"
+                exit 1
+            fi
         fi
     fi
 
