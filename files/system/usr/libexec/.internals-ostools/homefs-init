@@ -22,6 +22,8 @@ umount /tmp/homefs-init
 cryptsetup luksClose homefs_crypt
 systemctl restart cryptsetup-var-home.service
 sleep 5
+systemctl restart var-home.mount
+sleep 3
 rm -rf /tmp/homefs-init /var/home/lost+found
 for USER_DIR in /var/home/*;
 do
