@@ -1,12 +1,11 @@
 [Unit]
 Description=Mount homefs
-Before=local-fs.target
-After=var.mount
-BindsTo=var.mount
-ConditionPathExists=/var/usrlocal/homefs/homefs.img
+DefaultDependencies=no
+After=cryptsetup-var-home.service
+BindsTo=cryptsetup-var-home.service
 
 [Mount]
-What=/var/usrlocal/homefs/homefs.img
+What=/dev/mapper/homefs_crypt
 Where=/var/home
 Type=ext4
-Options=loop
+Options=defaults

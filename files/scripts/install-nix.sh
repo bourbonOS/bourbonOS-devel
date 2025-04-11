@@ -2,7 +2,12 @@
 
 set -oue pipefail
 
+dnf -y install fuse3
+truncate -s 1T /nix.img
+mkfs.ext4 -F /nix.img
+mkdir -p /nix-fs
+ext4fuse /nix.img /nix-fs
 sh <(curl -L https://nixos.org/nix/install) --daemon --yes
-mkdir /etc/.nix-mount-temp
-mv /nix /etc/.nix-mount-temp
-mkdir /nix
+fusermount -u /nix-fs
+
+mv /nix.img /etc/

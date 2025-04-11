@@ -1,12 +1,11 @@
 [Unit]
 Description=Setup homefs
-Before=home.mount
 After=var.mount
 BindsTo=var.mount
 
 [Service]
 Type=oneshot
-ExecStart=/usr/libexec/homefs/homefs-init
+ExecStart=/usr/libexec/.internals-ostools/homefs-init
 ExecStartPost=/usr/bin/systemctl disable --now homefs-setup.service
 
 [Install]

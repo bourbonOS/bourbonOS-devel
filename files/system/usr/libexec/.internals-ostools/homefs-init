@@ -1,0 +1,29 @@
+#!/bin/bash
+
+PASSWORD=$(openssl rand -base64 48)
+
+mkdir -p /tmp/homefs-init
+mkdir -p /var/usrlocal/homefs
+truncate -s $(df -h /var/home | awk 'NR==2 {print $2}') /tmp/homefs.img
+echo "$PASSWORD" | cryptsetup luksFormat --type luks2 /tmp/homefs.img
+echo "$PASSWORD" | keyctl add user homefs @u
+echo "$PASSWORD" | { 
+    cryptsetup luksOpen --key-file - --keyring=user --token="homefs" /tmp/homefs.img homefs_crypt; 
+    mkfs.ext4 -F /dev/mapper/homefs_crypt; 
+}
+cryptsetup luksOpen --keyring=user --token="homefs" /var/usrlocal/homefs/homefs.img homefs_crypt
+mount /dev/mapper/homefs_crypt /tmp/homefs-init
+mv -R /var/home/* /tmp/homefs-init/
+umount /tmp/homefs-init
+cryptsetup luksClose homefs_crypt
+systemctl restart cryptsetup-var-home.service
+sleep 5
+rm -rf /tmp/homefs-init /var/home/lost+found
+for USER_DIR in /var/home/*;
+do
+    if [ -d "$USER_DIR" ]; then
+        USERNAME=$(basename "$USER_DIR")
+        chown "$USERNAME:$USERNAME" "$USER_DIR"
+        chmod 700 "$USER_DIR"
+    fi
+done

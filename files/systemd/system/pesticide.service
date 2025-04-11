@@ -8,6 +8,3 @@ ExecStart=/usr/libexec/pesticide/check
 StandardOutput=tty
 StandardError=tty
 TTYPath=/dev/console
-
-[Install]
-WantedBy=multi-user.target
