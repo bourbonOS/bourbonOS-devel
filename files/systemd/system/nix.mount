@@ -5,7 +5,7 @@ After=var.mount ostree-remount.service nix-dir-move.service
 BindsTo=var.mount nix-dir-move.service
 
 [Mount]
-What=/var/usrlocal/nix/nix.img
+What=/var/usrlocal/nix/
 Where=/nix
-Type=ext4
-Options=loop,defaults
+Type=none
+Options=bind,defaults

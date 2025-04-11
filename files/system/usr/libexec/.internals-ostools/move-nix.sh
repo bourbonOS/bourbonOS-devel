@@ -1,8 +1,8 @@
 #!/bin/bash
 
-if [[ -f /etc/nix.img ]]; then
-    mkdir /var/usrlocal/nix
-    mv /etc/nix.img /var/usrlocal/nix/
+if [[ -d /etc/.nix-mount-temp ]]; then
+    mv /etc/.nix-mount-temp/nix /var/usrlocal
+    rmdir /etc/.nix-mount-temp
 else
     echo "nothing to do!!"
 fi
