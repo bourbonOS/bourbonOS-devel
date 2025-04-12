@@ -10,6 +10,6 @@ mkdir /nix /etc/systemd/system/gdm.service.d/
 
 cat <<EOF > /etc/systemd/system/gdm.service.d/override.conf
 [Unit]
-After=homefs-setup.service
-Requires=homefs-setup.service
+After=mount-homefs.service
+Requires=mount-homefs.service
 EOF

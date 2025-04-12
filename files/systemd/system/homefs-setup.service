@@ -1,8 +1,13 @@
 [Unit]
 Description=Setup homefs
+DefaultDependencies=no
 After=var.mount
 BindsTo=var.mount
 
 [Service]
 Type=oneshot
 ExecStart=/usr/libexec/.internals-ostools/homefs-init
+ExecStartPost=/usr/bin/systemctl disable homefs-setup.service
+
+[Install]
+WantedBy=multi-user.target
