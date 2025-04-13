@@ -1,8 +1,13 @@
 #!/bin/bash
 
-set -euo pipefail
-
 if [[ "$1" != "mount" ]]; then
+    set -euo pipefail
+
+    if [[ -d /var/usrlocal/homefs ]]; then
+        echo "Exiting"
+        exit 0
+    fi
+
     mkdir -p /var/usrlocal/homefs
     openssl -hex 12 > /var/usrlocal/homefs/.homefs-salt
     chmod 700 /var/usrlocal/homefs/.homefs-salt
@@ -40,6 +45,7 @@ if [[ "$1" != "mount" ]]; then
 
     touch /etc/.homefs.setup-is-done
 else
+    set -euo pipefail
     SALT=$(cat /var/usrlocal/homefs/.homefs-salt)
     KEY_DESC="homefs-mount-$SALT"
     BOARD_VENDOR=$(cat /sys/class/dmi/id/board_vendor 2>/dev/null || echo "no-vendor")
