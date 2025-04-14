@@ -3,5 +3,4 @@ system:
   enabled:
     - pesticide.service
     - nix-daemon.socket
-    - semanage-nix.service
     - init-loopfs.service
