@@ -1,5 +1,5 @@
 [Unit]
-Description=Mount LoopFS files
+Description=Mount LoopFS
 After=var.mount
 BindsTo=var.mount
 DefaultDependencies=no

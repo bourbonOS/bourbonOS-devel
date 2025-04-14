@@ -1,5 +1,5 @@
 [Unit]
-Description=Setup homefs
+Description=Setup LoopFS
 DefaultDependencies=no
 After=var.mount
 BindsTo=var.mount
