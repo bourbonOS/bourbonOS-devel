@@ -32,6 +32,9 @@ if [[ "$1" == "--mount-all" ]]; then
     echo -n "$key_material" | losetup -e AES256 -p 0 "$loopdev" "$HOMEFS_IMG"
     mount "$loopdev" "$HOME_DIR"
     mount -t overlay overlay -o lowerdir=/nix,upperdir=/var/usrlocal/nixfs/upper,workdir=/var/usrlocal/nixfs/work /nix
+
+    restorecon -RF /var/usrlocal/nixfs/upper
+
     echo "homefs+nixfs mounted successfully."
 else
     echo "Setting up encrypted homefs..."
@@ -74,6 +77,23 @@ else
     echo "Setting up nixfs..."
     mkdir -p /var/usrlocal/nixfs/{,work,upper}
 
+    semanage fcontext -a -t etc_t '/nix/store/[^/]+/etc(/.*)?'
+    semanage fcontext -a -t lib_t '/nix/store/[^/]+/lib(/.*)?'
+    semanage fcontext -a -t systemd_unit_file_t '/nix/store/[^/]+/lib/systemd/system(/.*)?'
+    semanage fcontext -a -t man_t '/nix/store/[^/]+/man(/.*)?'
+    semanage fcontext -a -t bin_t '/nix/store/[^/]+/s?bin(/.*)?'
+    semanage fcontext -a -t usr_t '/nix/store/[^/]+/share(/.*)?'
+    semanage fcontext -a -t var_run_t '/nix/var/nix/daemon-socket(/.*)?'
+    semanage fcontext -a -t usr_t '/nix/var/nix/profiles(/per-user/[^/]+)?/[^/]+'
+    semanage fcontext -a -t etc_t '/var/usrlocal/nixfs/upper/nix/store/[^/]+/etc(/.*)?'
+    semanage fcontext -a -t lib_t '/var/usrlocal/nixfs/upper/store/[^/]+/lib(/.*)?'
+    semanage fcontext -a -t systemd_unit_file_t '/var/usrlocal/nixfs/upper/store/[^/]+/lib/systemd/system(/.*)?'
+    semanage fcontext -a -t man_t '/var/usrlocal/nixfs/upper/store/[^/]+/man(/.*)?'
+    semanage fcontext -a -t bin_t '/var/usrlocal/nixfs/upper/store/[^/]+/s?bin(/.*)?'
+    semanage fcontext -a -t usr_t '/var/usrlocal/nixfs/upper/store/[^/]+/share(/.*)?'
+    semanage fcontext -a -t var_run_t '/var/usrlocal/nixfs/upper/var/nix/daemon-socket(/.*)?'
+    semanage fcontext -a -t usr_t '/var/usrlocal/nixfs/upper/var/nix/profiles(/per-user/[^/]+)?/[^/]+'
+
     echo "Mounting all..."
-    systemctl restart mount-loopfs.service gdm.service nix-daemon.socket semanage-nix.service
+    systemctl restart mount-loopfs.service gdm.service nix-daemon.socket
 fi

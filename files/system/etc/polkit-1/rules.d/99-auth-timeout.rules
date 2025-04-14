@@ -1,0 +1,14 @@
+polkit.addRule(function(action, subject) {
+  if (action.lookup("auth_admin_keep_session") === "yes" ||
+      action.lookup("auth_admin") === "yes" ||
+      action.lookup("auth_owner_keep_session") === "yes" ||
+      action.lookup("auth_owner") === "yes") {
+    if (subject.active) {
+      let now = new Date().getTime() / 1000;
+      let lastAuthenticated = subject.active[action.id];
+      if (lastAuthenticated && (now - lastAuthenticated) < 60) {
+        return polkit.Result.YES;
+      }
+    }
+  }
+});
