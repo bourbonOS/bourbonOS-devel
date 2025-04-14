@@ -1,0 +1,10 @@
+[Unit]
+Description=Mount LoopFS files
+After=var.mount
+BindsTo=var.mount
+DefaultDependencies=no
+
+[Service]
+Type=oneshot
+RemainAfterExit=true
+ExecStart=/usr/libexec/.internals-ostools/loopfs-init --mount-all

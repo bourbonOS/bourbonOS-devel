@@ -1,6 +1,7 @@
 [Unit]
 Description=Check integrity of configured directories
 After=usr.mount etc.mount
+BindsTo=usr.
 
 [Service]
 Type=oneshot

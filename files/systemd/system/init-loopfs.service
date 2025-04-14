@@ -6,7 +6,7 @@ BindsTo=var.mount
 
 [Service]
 Type=oneshot
-ExecStart=/usr/libexec/.internals-ostools/homefs-init
+ExecStart=/usr/libexec/.internals-ostools/loopfs-init
 ExecStartPost=/usr/bin/systemctl disable homefs-setup.service
 
 [Install]

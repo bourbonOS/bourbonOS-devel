@@ -1,9 +1,0 @@
-[Unit]
-Description=Move nix dir to usrlocal
-ConditionPathExists=/etc/.nix-mount-temp/nix
-After=var.mount etc.mount
-BindsTo=var.mount etc.mount
-
-[Service]
-Type=oneshot
-ExecStart=/usr/libexec/.internals-ostools/move-nix.sh

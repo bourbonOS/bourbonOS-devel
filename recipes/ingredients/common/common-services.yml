@@ -4,4 +4,4 @@ system:
     - pesticide.service
     - nix-daemon.socket
     - semanage-nix.service
-    - homefs-setup.service
+    - init-loopfs.service

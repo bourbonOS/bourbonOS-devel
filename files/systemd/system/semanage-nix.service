@@ -1,7 +1,7 @@
 [Unit]
 Description=Set selinux rules for nix
-After=nix.mount
-BindsTo=nix.mount
+After=mount-loopfs.service
+BindsTo=mount-loopfs.service
 
 [Service]
 Type=oneshot
