@@ -1,12 +1,10 @@
 #!/bin/bash
 
-LOOPFS_DIR="/var/usrlocal/loopfs"
-HOMEFS_IMG="$LOOPFS_DIR/homefs.img"
-NIX_IMG="/etc/nix.img"
-LOOPFS_NIX_IMG="$LOOPFS_DIR/nixfs.img"
+HOEMFS_DIR="/var/usrlocal/homefs"
+HOMEFS_IMG="$HOMEFS_DIR/homefs.img"
 HOME_DIR="/var/home"
 MOUNT_POINT="/tmp/homefs"
-SALT_FILE="$LOOPFS_DIR/.homefs-salt"
+SALT_FILE="$HOMEFS_DIR/.homefs-salt"
 KEY_PREFIX="homefs"
 
 get_hwid() {
@@ -33,21 +31,16 @@ if [[ "$1" == "--mount-all" ]]; then
     loopdev=$(losetup -f)
     echo -n "$key_material" | losetup -e AES256 -p 0 "$loopdev" "$HOMEFS_IMG"
     mount "$loopdev" "$HOME_DIR"
-    echo "Encrypted homefs mounted on $HOME_DIR"
-
-    if [[ -f "$LOOPFS_NIX_IMG" ]]; then
-        echo "Mounting nix image..."
-        mount -o loop "$LOOPFS_NIX_IMG" /nix
-        echo "Nix image mounted on /nix"
-    fi
+    mount -t overlay overlay -o lowerdir=/nix,upperdir=/var/usrlocal/nixfs/upper,workdir=/var/usrlocal/nixfs/work /nix
+    echo "homefs+nixfs mounted successfully."
 else
     echo "Setting up encrypted homefs..."
-    if [[ -d "$LOOPFS_DIR" ]]; then
-        echo "$LOOPFS_DIR already exists. Exiting setup."
+    if [[ -d "$HOMEFS_DIR" ]]; then
+        echo "$HOMEFS_DIR already exists. Exiting setup."
         exit 0
     fi
 
-    mkdir -p "$LOOPFS_DIR"
+    mkdir -p "$HOMEFS_DIR"
     openssl rand -hex 12 > "$SALT_FILE"
     chmod 700 "$SALT_FILE"
 
@@ -79,19 +72,8 @@ else
     done
 
     echo "Setting up nixfs..."
-    if [[ -f "$NIX_IMG" ]]; then
-        if [[ -f "$LOOPFS_NIX_IMG" ]]; then
-            echo "Removing image-supplied $NIX_IMG"
-            rm -f "$NIX_IMG"
-        else
-            echo "Moving $NIX_IMG to $LOOPFS_DIR"
-            mkdir -p "$LOOPFS_DIR"
-            mv "$NIX_IMG" "$LOOPFS_NIX_IMG"
-        fi
-    else
-        echo "Nothing to do."
-    fi
+    mkdir -p /var/usrlocal/nixfs/{,work,upper}
 
-    echo "Mounting..."
-    systemctl restart mount-loopfs.service
+    echo "Mounting all..."
+    systemctl restart mount-loopfs.service gdm.service nix-daemon.socket semanage-nix.service
 fi

@@ -1,8 +1,0 @@
-[Unit]
-Description=Give users access to /nix
-After=mount-loopfs.service
-BindsTo=mount-loopfs.service
-
-[Service]
-Type=oneshot
-ExecStart=/usr/libexec/.internals-ostools/rw-access.sh
