@@ -3,6 +3,8 @@ Description=Mount LoopFS
 After=var.mount
 BindsTo=var.mount
 DefaultDependencies=no
+ConditionPathExists=/var/usrlocal/homefs
+ConditionPathExists=/var/usrlocal/nixfs
 
 [Service]
 Type=oneshot
