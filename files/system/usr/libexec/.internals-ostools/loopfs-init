@@ -1,39 +1,33 @@
 #!/bin/bash
 
-HOEMFS_DIR="/var/usrlocal/homefs"
+if [[ "$(id -u)" -eq 0 ]]; then
+    echo "Initializing..."
+else
+    echo "Failed."
+fi
+
+HOMEFS_DIR="/var/usrlocal/homefs"
 HOMEFS_IMG="$HOMEFS_DIR/homefs.img"
 HOME_DIR="/var/home"
 MOUNT_POINT="/tmp/homefs"
 SALT_FILE="$HOMEFS_DIR/.homefs-salt"
-KEY_PREFIX="homefs"
-
-get_hwid() {
-    local vendor=$(cat /sys/class/dmi/id/board_vendor 2>/dev/null || echo "no-vendor")
-    local sku=$(cat /sys/class/dmi/id/product_sku 2>/dev/null || echo "no-sku")
-    echo "${vendor}${sku}"
-}
-
-get_key_material() {
-    local salt="$1"
-    local hwid=$(get_hwid)
-    echo -n "${salt}${hwid}" | sha256sum | cut -d' ' -f1
-}
+KEY_DESC="homefs-mount-$(cat $SALT_FILE)"
+KEY_MATERIAL=$(echo -n "$(cat $SALT_FILE)$(cat /sys/class/dmi/id/product_sku 2>/dev/null || echo "no-sku")$(cat /sys/class/dmi/id/board_vendor 2>/dev/null || echo "no-vendor")" | sha256sum | cut -d' ' -f1)
+LOOP_DEVICE=$(losetup -f)
 
 if [[ "$1" == "--mount-all" ]]; then
     echo "Mounting homefs+nixfs..."
     local salt=$(cat "$SALT_FILE")
-    local key_desc="${KEY_PREFIX}-mount-$salt"
-    local key_material=$(get_key_material "$salt")
-    local loopdev
+    local key_desc="${KEY_PREFIX}-mount-$(cat $SALT_FILE)"
+    local key_material=$(get_key_material "$(cat $SALT_FILE)")
 
-    keyctl add user "$key_desc" "$key_material" @u
+    keyctl add user "$KEY_DESC" "$KEY_MATERIAL" @u
 
-    loopdev=$(losetup -f)
-    echo -n "$key_material" | losetup -e AES256 -p 0 "$loopdev" "$HOMEFS_IMG"
-    mount "$loopdev" "$HOME_DIR"
-    mount -t overlay overlay -o lowerdir=/nix,upperdir=/var/usrlocal/nixfs/upper,workdir=/var/usrlocal/nixfs/work /nix
+    echo -n "$KEY_MATERIAL" | losetup -e AES256 -p 0 "$LOOP_DEVICE" "$HOMEFS_IMG"
+    mount "$LOOP_DEVICE" "$HOME_DIR"
+    mount -t overlay overlay -o "lowerdir=/nix,upperdir=/var/usrlocal/nixfs/upper,workdir=/var/usrlocal/nixfs/work" /nix
 
-    restorecon -RF /var/usrlocal/nixfs/upper
+    restorecon -RFv /var/{usrlocal/nixfs/,home/}
 
     echo "homefs+nixfs mounted successfully."
 else
@@ -47,52 +41,35 @@ else
     openssl rand -hex 12 > "$SALT_FILE"
     chmod 700 "$SALT_FILE"
 
-    local max_size=$(df -h "$HOME_DIR" | awk 'NR==2 {print $2}')
-    local salt=$(cat "$SALT_FILE")
-    local key_desc="${KEY_PREFIX}-mountkey-$salt"
-    local key_material=$(get_key_material "$salt")
-    local loopdev
+    keyctl add user "$KEY_DESC" "$KEY_MATERIAL" @u
 
-    keyctl add user "$key_desc" "$key_material" @u
-
-    truncate -s "$max_size" "$HOMEFS_IMG"
-    loopdev=$(losetup -f)
-    echo -n "$key_material" | losetup -e AES256 -p 0 "$loopdev" "$HOMEFS_IMG"
-    mkfs.ext4 -F "$loopdev"
-    mount "$loopdev" "$MOUNT_POINT"
+    truncate -s "$(df -h "$HOME_DIR" | awk 'NR==2 {print $2}')" "$HOMEFS_IMG"
+    echo -n "$KEY_MATERIAL" | losetup -e AES256 -p 0 "$LOOP_DEVICE" "$HOMEFS_IMG"
+    mkfs.ext4 -F "$LOOP_DEVICE"
+    mount "$LOOP_DEVICE" "$MOUNT_POINT"
     mv "$HOME_DIR"/* "$MOUNT_POINT"/
     umount "$MOUNT_POINT"
-    losetup -d "$loopdev"
-
-    echo "Setting home directory permissions..."
-    for USER_DIR in "$HOME_DIR"/*; do
-        if [[ -d "$USER_DIR" ]]; then
-            local username=$(basename "$USER_DIR")
-            chown "$username:$username" "$USER_DIR"
-            chmod 700 "$USER_DIR"
-            restorecon -Rv "$USER_DIR"
-        fi
-    done
+    losetup -d "$LOOP_DEVICE"
 
     echo "Setting up nixfs..."
-    mkdir -p /var/usrlocal/nixfs/{,work,upper}
+    mkdir -p /var/usrlocal/nixfs/{upper,work}
 
-    semanage fcontext -a -t etc_t '/nix/store/[^/]+/etc(/.*)?'
-    semanage fcontext -a -t lib_t '/nix/store/[^/]+/lib(/.*)?'
-    semanage fcontext -a -t systemd_unit_file_t '/nix/store/[^/]+/lib/systemd/system(/.*)?'
-    semanage fcontext -a -t man_t '/nix/store/[^/]+/man(/.*)?'
-    semanage fcontext -a -t bin_t '/nix/store/[^/]+/s?bin(/.*)?'
-    semanage fcontext -a -t usr_t '/nix/store/[^/]+/share(/.*)?'
-    semanage fcontext -a -t var_run_t '/nix/var/nix/daemon-socket(/.*)?'
-    semanage fcontext -a -t usr_t '/nix/var/nix/profiles(/per-user/[^/]+)?/[^/]+'
-    semanage fcontext -a -t etc_t '/var/usrlocal/nixfs/upper/nix/store/[^/]+/etc(/.*)?'
-    semanage fcontext -a -t lib_t '/var/usrlocal/nixfs/upper/store/[^/]+/lib(/.*)?'
-    semanage fcontext -a -t systemd_unit_file_t '/var/usrlocal/nixfs/upper/store/[^/]+/lib/systemd/system(/.*)?'
-    semanage fcontext -a -t man_t '/var/usrlocal/nixfs/upper/store/[^/]+/man(/.*)?'
-    semanage fcontext -a -t bin_t '/var/usrlocal/nixfs/upper/store/[^/]+/s?bin(/.*)?'
-    semanage fcontext -a -t usr_t '/var/usrlocal/nixfs/upper/store/[^/]+/share(/.*)?'
-    semanage fcontext -a -t var_run_t '/var/usrlocal/nixfs/upper/var/nix/daemon-socket(/.*)?'
-    semanage fcontext -a -t usr_t '/var/usrlocal/nixfs/upper/var/nix/profiles(/per-user/[^/]+)?/[^/]+'
+    semanage fcontext -a -t etc_t "/nix/store/[^/]+/etc(/.*)?"
+    semanage fcontext -a -t lib_t "/nix/store/[^/]+/lib(/.*)?"
+    semanage fcontext -a -t systemd_unit_file_t "/nix/store/[^/]+/lib/systemd/system(/.*)?"
+    semanage fcontext -a -t man_t "/nix/store/[^/]+/man(/.*)?"
+    semanage fcontext -a -t bin_t "/nix/store/[^/]+/s?bin(/.*)?"
+    semanage fcontext -a -t usr_t "/nix/store/[^/]+/share(/.*)?"
+    semanage fcontext -a -t var_run_t "/nix/var/nix/daemon-socket(/.*)?"
+    semanage fcontext -a -t usr_t "/nix/var/nix/profiles(/per-user/[^/]+)?/[^/]+"
+    semanage fcontext -a -t etc_t "/usr/local/nixfs/upper/nix/store/[^/]+/etc(/.*)?"
+    semanage fcontext -a -t lib_t "/usr/local/nixfs/upper/store/[^/]+/lib(/.*)?"
+    semanage fcontext -a -t systemd_unit_file_t "/usr/local/nixfs/upper/store/[^/]+/lib/systemd/system(/.*)?"
+    semanage fcontext -a -t man_t "/usr/local/nixfs/upper/store/[^/]+/man(/.*)?"
+    semanage fcontext -a -t bin_t "/usr/local/nixfs/upper/store/[^/]+/s?bin(/.*)?"
+    semanage fcontext -a -t usr_t "/usr/local/nixfs/upper/store/[^/]+/share(/.*)?"
+    semanage fcontext -a -t var_run_t "/usr/local/nixfs/upper/var/nix/daemon-socket(/.*)?"
+    semanage fcontext -a -t usr_t "/usr/local/nixfs/upper/var/nix/profiles(/per-user/[^/]+)?/[^/]+"
 
     echo "Mounting all..."
     systemctl restart mount-loopfs.service gdm.service nix-daemon.socket
