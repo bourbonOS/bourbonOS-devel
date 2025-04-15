@@ -25,7 +25,7 @@ case $1 in
         fi
         echo "Authentication is needed to install packages."
         sleep 3
-        pkexec usermod -a -G synergy-nix-rwx
+        pkexec usermod -a -G synergy-nix-rwx $USER
         echo "installing $2..."
         nix-env -iA nixpkgs."$2"
 	    echo "installed $2!"
@@ -38,7 +38,7 @@ case $1 in
         fi
         echo "Authentication is needed to remove packages."
         sleep 3
-        pkexec usermod -a -G synergy-nix-rwx
+        pkexec usermod -a -G synergy-nix-rwx $USER
         echo "removing $2..."
         nix-env -e "$2"
         nix-collect-garbage
@@ -47,14 +47,14 @@ case $1 in
     list)
         echo "Authentication is needed to access the package list."
         sleep 3
-        pkexec usermod -a -G synergy-nix-rwx
+        pkexec usermod -a -G synergy-nix-rwx $USER
         echo "packages:"
         nix-env -q
         ;;
     update)
         echo "Authentication is needed to update channels."
         sleep 3
-        pkexec usermod -a -G synergy-nix-rwx
+        pkexec usermod -a -G synergy-nix-rwx $USER
         echo "updating nix channels..."
         nix-channel --update
         nix-collect-garbage
@@ -62,7 +62,7 @@ case $1 in
     upgrade)
         echo "Authentication is needed to upgrade packages."
         sleep 3
-        pkexec usermod -a -G synergy-nix-rwx
+        pkexec usermod -a -G synergy-nix-rwx $USER
         echo "upgrading packages..."
         nix-env --upgrade
         nix-collect-garbage
@@ -75,3 +75,5 @@ case $1 in
         exit 1
         ;;
 esac
+
+pkexec gpasswd -d $USER synergy-nix-rwx

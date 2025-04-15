@@ -1,0 +1,14 @@
+polkit.addRule(function(action, subject) {
+  if (action.id == "org.freedesktop.systemtoolsbackends.set-membership") {
+    let username = action.lookup("username");
+    let groupname = action.lookup("group");
+    let membersToRemove = action.lookup("remove");
+
+    if (username === subject.user &&
+        groupname === "synergy-nix-rwx" &&
+        Array.isArray(membersToRemove) &&
+        membersToRemove.includes(username)) {
+      return polkit.Result.YES;
+    }
+  }
+});

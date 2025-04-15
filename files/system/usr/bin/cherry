@@ -93,14 +93,19 @@ case "$1" in
                 ;;
             upgrade)
                 clear
-                echo "OS Upgrade Starting..."
-                echo "Upgrade logs also accessible at /tmp/topgrade.log-$FILENAME_TMP"
-                topgrade | tee /tmp/topgrade.log-$FILENAME_TMP
-                if [[ $? -eq 0 ]]; then
-                    echo "OS Upgrade Complete!"
-                else
-                    echo "OS Upgrade Failed! Check the logs at /tmp/topgrade.log-$FILENAME_TMP for full detail."
-                fi
+                echo "Starting upgrade..."
+                pkexec usermod -a -G synergy-nix-rwx $USER
+                echo "OS Upgrade logs can be shown here."
+                echo "When run in the background (usually by `bupd`), logs will be stored in /tmp."
+                echo "You may get asked for your password again. Be aware of that."
+                pkexec flatpak upgrade --system
+                flatpak upgrade --user
+                nix-channel --update
+                nix-env --upgrade
+                nix-collect-garbage
+                pkexec gpasswd -d $USER synergy-nix-rwx
+                pkexec bootc upgrade
+                echo "OS upgrade finished!"
                 ;;
             status)
                 status
