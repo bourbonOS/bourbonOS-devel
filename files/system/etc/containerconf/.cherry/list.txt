@@ -3,4 +3,5 @@ alpine
 fedora
 ubuntu
 debian
-opensuse
+opensuse-leap
+opensuse-tumbleweed
