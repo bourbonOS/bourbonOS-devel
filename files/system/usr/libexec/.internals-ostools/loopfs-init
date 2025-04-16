@@ -16,10 +16,9 @@ KEY_MATERIAL=$(echo -n "$(cat $SALT_FILE)$(cat /sys/class/dmi/id/product_sku 2>/
 LOOP_DEVICE=$(losetup -f)
 
 if [[ "$1" == "--mount-all" ]]; then
+    set -oue pipefail
+
     echo "Mounting homefs+nixfs..."
-    local salt=$(cat "$SALT_FILE")
-    local key_desc="${KEY_PREFIX}-mount-$(cat $SALT_FILE)"
-    local key_material=$(get_key_material "$(cat $SALT_FILE)")
 
     keyctl add user "$KEY_DESC" "$KEY_MATERIAL" @u
 
@@ -31,6 +30,8 @@ if [[ "$1" == "--mount-all" ]]; then
 
     echo "homefs+nixfs mounted successfully."
 else
+    set -oue pipefail
+
     echo "Setting up encrypted homefs..."
     if [[ -d "$HOMEFS_DIR" ]]; then
         echo "$HOMEFS_DIR already exists. Exiting setup."
@@ -43,6 +44,7 @@ else
 
     keyctl add user "$KEY_DESC" "$KEY_MATERIAL" @u
 
+    mkdir $HOMEFS_DIR
     truncate -s "$(df -h "$HOME_DIR" | awk 'NR==2 {print $2}')" "$HOMEFS_IMG"
     echo -n "$KEY_MATERIAL" | losetup -e AES256 -p 0 "$LOOP_DEVICE" "$HOMEFS_IMG"
     mkfs.ext4 -F "$LOOP_DEVICE"
