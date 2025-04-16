@@ -27,7 +27,7 @@ if [[ "$1" == "--mount-all" ]]; then
     mount "$LOOP_DEVICE" "$HOME_DIR"
     mount -t overlay overlay -o "lowerdir=/nix,upperdir=/var/usrlocal/nixfs/upper,workdir=/var/usrlocal/nixfs/work" /nix
 
-    restorecon -RFv /var/{usrlocal/nixfs/,home/}
+    restorecon -RFv /{usr/local/nixfs/,var/home/}
 
     echo "homefs+nixfs mounted successfully."
 else
@@ -73,4 +73,5 @@ else
 
     echo "Mounting all..."
     systemctl restart mount-loopfs.service gdm.service nix-daemon.socket
+    
 fi
