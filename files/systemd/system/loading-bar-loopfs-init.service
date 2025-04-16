@@ -1,0 +1,14 @@
+[Unit]
+Description=Animated Loading Bar Display
+
+[Service]
+ExecStart=/usr/libexec/.internals-ostools/loadingbar
+StandardOutput=tty
+StandardInput=tty
+TTYPath=/dev/tty1
+TTYReset=yes
+TTYVHangup=yes
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

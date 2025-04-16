@@ -32,6 +32,9 @@ if [[ "$1" == "--mount-all" ]]; then
 else
     set -oue pipefail
 
+    plymouth quit
+    systemctl start loading-bar-loopfs-init.service
+
     echo "Setting up encrypted homefs..."
     if [[ -d "$HOMEFS_DIR" ]]; then
         echo "$HOMEFS_DIR already exists. Exiting setup."
@@ -74,6 +77,7 @@ else
     semanage fcontext -a -t usr_t "/usr/local/nixfs/upper/var/nix/profiles(/per-user/[^/]+)?/[^/]+"
 
     echo "Mounting all..."
+    systemctl stop loading-bar-loopfs-init.service
     systemctl restart mount-loopfs.service gdm.service nix-daemon.socket
     
 fi
