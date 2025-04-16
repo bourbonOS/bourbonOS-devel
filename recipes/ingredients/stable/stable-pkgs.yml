@@ -16,6 +16,8 @@ install:
     - iwlwifi-mvm-firmware
     - iwlwifi-dvm-firmware
     - iwlegacy-firmware
+    - plymouth 
+    - plymouth-theme-spinner
 remove:
   packages:
     - toolbox
