@@ -4,8 +4,6 @@ DefaultDependencies=no
 Before=multi-user.target
 RequiresMountsFor=/nix/store
 ConditionPathIsReadWrite=/nix/var/nix/daemon-socket
-After=mount-loopfs.service
-BindsTo=mount-loopfs.service
 
 [Socket]
 ListenStream=/nix/var/nix/daemon-socket/socket

@@ -7,6 +7,6 @@ fi
 
 set -oue pipefail
 
-mkdir -p /var/usrlocal/homefs
-chown root:root /var/usrlocal/homefs
-chmod 700 /var/usrlocal/homefs
+mkdir -p /var/usrlocal/{homefs,nixfs/{upper,work}}
+chown root:root /var/usrlocal/{homefs,nixfs/{upper,work}}
+chmod 700 /var/usrlocal/{homefs,nixfs/{upper,work}}

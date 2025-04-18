@@ -5,8 +5,6 @@ RequiresMountsFor=/nix/store
 RequiresMountsFor=/nix/var
 RequiresMountsFor=/nix/var/nix/db
 ConditionPathIsReadWrite=/nix/var/nix/daemon-socket
-After=mount-loopfs.service
-BindsTo=mount-loopfs.service
 
 [Service]
 ExecStart=$(find /nix/store -name nix-daemon | grep '/bin/nix-daemon$' | head -n 1) nix-daemon --daemon
