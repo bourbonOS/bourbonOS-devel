@@ -1,0 +1,43 @@
+#!/bin/bash
+
+if [[ "$UID" -ne 0 ]]; then
+    echo "Error: Not authorized."
+    exit 1
+fi
+
+set -oue pipefail
+shopt -s dotglob
+
+TARGET_USER=$1
+HOME_DIR=/var/home
+HOMEFS_DIR=/var/usrlocal/homefs
+MAPPER_DIR=/dev/mapper/homefs-decrypted-$TARGET_USER
+PRODUCT_SKU=$(cat /sys/class/dmi/id/product_sku | tr -d ' ')
+GEN_TMPDIRNAME=$(openssl rand -hex 32)
+
+if [[ ! -f $HOMEFS_DIR/$TARGET_USER.img.homefs ]]; then
+    truncate -s "$(df -h "$HOME_DIR" | awk 'NR==2 {print $2}')" $HOMEFS_DIR/$TARGET_USER.img.homefs
+    chown $TARGET_USER:$TARGET_USER $HOMEFS_DIR/$TARGET_USER.img.homefs
+    chmod 700 $HOMEFS_DIR/$TARGET_USER.img.homefs
+    echo "$(openssl rand -base64 12)-$(openssl rand -hex 18)" | keyctl add user "$PRODUCT_SKU-homefs-$TARGET_USER"
+    keyctl pipe "$PRODUCT_SKU-homefs-$TARGET_USER" | cryptsetup --type luks2 --cipher aes-xts-plain64 luksFormat $HOMEFS_DIR/$TARGET_USER.img.homefs
+    keyctl pipe "$PRODUCT_SKU-homefs-$TARGET_USER" | cryptsetup luksOpen $HOMEFS_DIR/$TARGET_USER.img.homefs homefs-decrypted-$TARGET_USER
+    mkfs.ext4 $MAPPER_DIR -F
+    mkdir -p /tmp/homefs-private-$GEN_TMPDIRNAME/
+    mount $MAPPER_DIR /tmp/homefs-private-$GEN_TMPDIRNAME/
+    mv $HOME_DIR/$TARGET_USER/* /tmp/homefs-private-$GEN_TMPDIRNAME/
+    mount -o remount $MAPPER_DIR $HOME_DIR/$TARGET_USER/
+else
+    if [[ "$PAM_TYPE" == "open_session" ]]; then
+        keyctl pipe "$PRODUCT_SKU-homefs-$TARGET_USER" | cryptsetup luksOpen $HOMEFS_DIR/$TARGET_USER.img.homefs homefs-decrypted-$TARGET_USER
+        mkdir -p $HOME_DIR/$TARGET_USER/
+        mount $MAPPER_DIR $HOME_DIR/$TARGET_USER/
+    elif [[ "$PAM_TYPE" == "close_session" ]]; then
+        umount $HOME_DIR/$TARGET_USER
+        rmdir $HOME_DIR/$TARGET_USER
+        cryptsetup luksClose homefs-decrypted-$TARGET_USER
+    else
+        echo "UNKNOWN SESSION TYPE!! Exiting..."
+        exit 1
+    fi
+fi
