@@ -1,6 +1,5 @@
 type: systemd
 system:
   enabled:
-    - pesticide.service
     - nix-daemon.socket
-    - init-loopfs.service
+    - init-homefs.service
