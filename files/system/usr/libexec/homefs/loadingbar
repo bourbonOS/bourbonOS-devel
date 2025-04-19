@@ -5,7 +5,7 @@ clear
 update_dimensions() {
     term_width=$(tput cols)
     term_height=$(tput lines)
-    bar_width=$((term_width * 60 / 100))
+    bar_width=$((term_width * 70 / 100))
     [[ $bar_width -gt $term_width ]] && bar_width=$term_width
 
     msg1=$1
@@ -15,6 +15,7 @@ update_dimensions() {
     msg1_col=$(( (term_width - ${#msg1}) / 2 ))
     msg2_col=$(( (term_width - ${#msg2}) / 2 ))
 
+    # Clear the screen and redraw messages
     clear
     tput cup $msg1_row $msg1_col
     printf "%s" "$msg1"
@@ -31,69 +32,43 @@ offset=0
 frame=0
 frames_per_cycle=200  # Long sine wave cycle
 
-# Run the command passed as $3 in the background and log its output
+# Run the command passed as $3 in the background
 if [[ -z "$3" ]]; then
     echo "Error: No command provided to run in the background."
     tput cnorm
     exit 1
 fi
 
-log_file=$(mktemp)
-$3 >"$log_file" 2>&1 &
+$3 &
 cmd_pid=$!
 
-# Function to display logs
-show_logs() {
-    clear
-    tput cup 0 0
-    echo "Command Logs"
-    echo "----------------------------------------"
-    tail -n $(tput lines) "$log_file"
-}
-
-# Toggle between loading screen and logs
-show_loading_screen=true
-
-# Non-blocking keypress listener
 while kill -0 $cmd_pid 2>/dev/null; do
-    if $show_loading_screen; then
-        tput cup 0 0
-        tput el
+    # Always draw on top row
+    tput cup 0 0
+    tput el
 
-        for ((i = 0; i < term_width; i++)); do
-            index=$(( (i - offset + term_width) % term_width ))
-            if (( index < bar_width )); then
-                printf "="
-            else
-                printf "#"
-            fi
-        done
-
-        tput cup $msg1_row $msg1_col
-        printf "%s" "$msg1"
-        tput cup $msg2_row $msg2_col
-        printf "%s" "$msg2"
-
-        ((offset = (offset + 1) % term_width))
-        ((frame = (frame + 1) % frames_per_cycle))
-    else
-        show_logs
-        sleep 0.1
-    fi
-
-    if read -rsn1 -t 0.1 key; then
-        if [[ $key == "v" ]]; then
-            if $show_loading_screen; then
-                show_loading_screen=false
-            else
-                show_loading_screen=true
-            fi
-            clear
+    # Draw the loading bar
+    for ((i = 0; i < term_width; i++)); do
+        index=$(( (i - offset + term_width) % term_width ))
+        if (( index < bar_width )); then
+            printf "="
+        else
+            printf "#"
         fi
-    fi
+    done
+
+    # Calculate delay using sine wave
+    angle=$(( (frame * 360 / frames_per_cycle) % 360 ))
+    rad=$(echo "$angle * 3.14159 / 180" | bc -l)
+    delay=$(echo "0.001 + (0.004 * (1 + s($rad)))" | bc -l)
+
+    sleep $delay
+
+    # Update offset and frame
+    ((offset = (offset + 1) % term_width))
+    ((frame = (frame + 1) % frames_per_cycle))
 done
 
-# Cleanup and restore terminal
+# Restore cursor and clear screen when the command finishes
 tput cnorm
 clear
-rm -f "$log_file"
