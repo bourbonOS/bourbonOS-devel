@@ -15,7 +15,6 @@ update_dimensions() {
     msg1_col=$(( (term_width - ${#msg1}) / 2 ))
     msg2_col=$(( (term_width - ${#msg2}) / 2 ))
 
-    # Clear the screen and redraw messages
     clear
     tput cup $msg1_row $msg1_col
     printf "%s" "$msg1"
@@ -30,9 +29,8 @@ trap 'update_dimensions "$1" "$2"' SIGWINCH
 
 offset=0
 frame=0
-frames_per_cycle=200  # Long sine wave cycle
+frames_per_cycle=200
 
-# Run the command passed as $3 in the background
 if [[ -z "$3" ]]; then
     echo "Error: No command provided to run in the background."
     tput cnorm
@@ -43,11 +41,9 @@ $3 &
 cmd_pid=$!
 
 while kill -0 $cmd_pid 2>/dev/null; do
-    # Always draw on top row
     tput cup 0 0
     tput el
 
-    # Draw the loading bar
     for ((i = 0; i < term_width; i++)); do
         index=$(( (i - offset + term_width) % term_width ))
         if (( index < bar_width )); then
@@ -57,18 +53,15 @@ while kill -0 $cmd_pid 2>/dev/null; do
         fi
     done
 
-    # Calculate delay using sine wave
     angle=$(( (frame * 360 / frames_per_cycle) % 360 ))
     rad=$(echo "$angle * 3.14159 / 180" | bc -l)
     delay=$(echo "0.001 + (0.004 * (1 + s($rad)))" | bc -l)
 
     sleep $delay
 
-    # Update offset and frame
     ((offset = (offset + 1) % term_width))
     ((frame = (frame + 1) % frames_per_cycle))
 done
 
-# Restore cursor and clear screen when the command finishes
 tput cnorm
 clear
