@@ -1,5 +1,5 @@
 type: dnf
-source: local
+source: ghcr.io/blue-build/modules/dnf:dnf-module
 group-install:
   packages:
     - gnome-desktop
