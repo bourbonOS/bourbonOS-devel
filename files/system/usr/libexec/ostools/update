@@ -1,0 +1,30 @@
+#!/bin/bash
+
+umsg="!! Updating your system !!"
+
+loadingbar() {
+    /usr/libexec/ostools/loadingbar
+}
+
+if [[ "$1" == "--no-interact" ]]; then
+    set -oue pipefail
+    bootc upgrade
+    flatpak upgrade --system
+    for USER in /var/home/*; do su - "$USER" -c "flatpak upgrade --user"; done
+    nix-channel --update
+    nix-env --upgrade
+    nix-collect-garbage
+elif [[ "$1" == "--interactive" ]]; then
+    set -oue pipefail
+    echo "Starting manual upgrade in 3 seconds."
+    echo "Press `CTRL+C` to cancel."
+    sleep 3
+    loadingbar "$umsg" "Task: Upgrade system" "bootc upgrade" --sysupdate-type
+    loadingbar "$umsg" "Task: Upgrade system flatpaks" "flatpak upgrade --system" --sysupdate-type
+    loadingbar "$umsg" "Task: Upgrade user flatpaks" "for USER in /var/home/*; do su - "$USER" -c "flatpak upgrade --user"; done" --sysupdate-type
+    loadingbar "$umsg" "Task: Update Nix channels" "nix-channel --update" --sysupdate-type
+    loadingbar "$umsg" "Task: Upgrade Nix packages" "nix-env --upgrade" --sysupdate-type
+    loadingbar "$umsg" "Task: Clean up" "nix-collect-garbage" --sysupdate-type
+    echo "Upgrade finished."
+    echo "Logs in /tmp/upgrade-logs.tmp."
+fi

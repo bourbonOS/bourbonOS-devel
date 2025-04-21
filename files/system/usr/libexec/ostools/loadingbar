@@ -37,7 +37,11 @@ if [[ -z "$3" ]]; then
     exit 1
 fi
 
-$3 &
+if [[ "$4" == "--sysupdate-type" ]]; then
+    "$3 &" >> /tmp/upgrade-logs.tmp 2>&1 &
+else
+    "$3 &"
+fi
 cmd_pid=$!
 
 while kill -0 $cmd_pid 2>/dev/null; do

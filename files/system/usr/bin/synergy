@@ -1,5 +1,11 @@
 #!/bin/bash
 
+if [[ $EUID != 0 ]]; then
+    echo "Error: Please run this as root."
+    echo "Example: `run0 synergy list`"
+    exit 1
+fi
+
 # set help text
 help () {
     cat <<EOF
@@ -23,9 +29,6 @@ case $1 in
             help
             exit 1
         fi
-        echo "Authentication is needed to install packages."
-        sleep 3
-        pkexec usermod -a -G synergy-nix-rwx $USER
         echo "installing $2..."
         nix-env -iA nixpkgs."$2"
 	    echo "installed $2!"
@@ -36,33 +39,21 @@ case $1 in
             help
             exit 1
         fi
-        echo "Authentication is needed to remove packages."
-        sleep 3
-        pkexec usermod -a -G synergy-nix-rwx $USER
         echo "removing $2..."
         nix-env -e "$2"
         nix-collect-garbage
        	echo "removed $2!"
         ;;
     list)
-        echo "Authentication is needed to access the package list."
-        sleep 3
-        pkexec usermod -a -G synergy-nix-rwx $USER
         echo "packages:"
         nix-env -q
         ;;
     update)
-        echo "Authentication is needed to update channels."
-        sleep 3
-        pkexec usermod -a -G synergy-nix-rwx $USER
         echo "updating nix channels..."
         nix-channel --update
         nix-collect-garbage
         ;;
     upgrade)
-        echo "Authentication is needed to upgrade packages."
-        sleep 3
-        pkexec usermod -a -G synergy-nix-rwx $USER
         echo "upgrading packages..."
         nix-env --upgrade
         nix-collect-garbage
@@ -75,5 +66,3 @@ case $1 in
         exit 1
         ;;
 esac
-
-pkexec gpasswd -d $USER synergy-nix-rwx
