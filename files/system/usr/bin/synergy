@@ -1,11 +1,5 @@
 #!/bin/bash
 
-if [[ $EUID != 0 ]]; then
-    echo "Error: Please run this as root."
-    echo "Example: `run0 synergy list`"
-    exit 1
-fi
-
 # set help text
 help () {
     cat <<EOF
@@ -22,47 +16,52 @@ EOF
 }
 
 # main function
-case $1 in
-    install)
-        if [ -z "$2" ]; then
-            echo "usage: $0 install <pkg>"
+if [[ "$EUID" == "0" ]]; then
+    case $1 in
+        install)
+            if [ -z "$2" ]; then
+                echo "Usage: $0 install <pkg>"
+                help
+                exit 1
+            fi
+            echo "Installing $2..."
+            nix-env -iA nixpkgs."$2"
+            echo "Installed $2!"
+            ;;
+        remove)
+            if [ -z "$2" ]; then
+                echo "Usage: $0 remove <pkg>"
+                help
+                exit 1
+            fi
+            echo "Removing $2..."
+            nix-env -e "$2"
+            nix-collect-garbage
+            echo "Removed $2!"
+            ;;
+        list)
+            echo "Packages:"
+            nix-env -q
+            ;;
+        update)
+            echo "Updating Nix channels..."
+            nix-channel --update
+            nix-collect-garbage
+            ;;
+        upgrade)
+            echo "Upgrading packages..."
+            nix-env --upgrade
+            nix-collect-garbage
+            ;;
+        help)
+            help
+            ;;
+        *)
             help
             exit 1
-        fi
-        echo "installing $2..."
-        nix-env -iA nixpkgs."$2"
-	    echo "installed $2!"
-        ;;
-    remove)
-        if [ -z "$2" ]; then
-            echo "usage: $0 remove <pkg>"
-            help
-            exit 1
-        fi
-        echo "removing $2..."
-        nix-env -e "$2"
-        nix-collect-garbage
-       	echo "removed $2!"
-        ;;
-    list)
-        echo "packages:"
-        nix-env -q
-        ;;
-    update)
-        echo "updating nix channels..."
-        nix-channel --update
-        nix-collect-garbage
-        ;;
-    upgrade)
-        echo "upgrading packages..."
-        nix-env --upgrade
-        nix-collect-garbage
-        ;;
-    help)
-        help
-        ;;
-    *)
-        help
-        exit 1
-        ;;
-esac
+            ;;
+    esac
+else
+    echo "Not authorized. Please run as root."
+    exit 1
+fi

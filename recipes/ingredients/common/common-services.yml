@@ -3,3 +3,4 @@ system:
   enabled:
     - nix-daemon.socket
     - init-homefs.service
+    - sysupdate.timer

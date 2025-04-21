@@ -1,0 +1,11 @@
+[Unit]
+Description=Update your system
+
+[Timer]
+OnBootSec=0
+OnBootSec=2h
+Persistent=false
+Unit=sysupdate.service
+
+[Install]
+WantedBy=timers.target

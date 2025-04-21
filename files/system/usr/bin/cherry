@@ -65,6 +65,7 @@ status() {
     cat <<EOF
 bourbonOS $(cat /etc/bourbonOS-version)
 pesticide: $(/usr/libexec/pesticide/status) $(/usr/libexec/pesticide/version)
+homefs: MOUNTED $(cat /etc/homefs-version)
 =======================
 host: $(hostname)
 kargs: $(cat /proc/cmdline | sed -E 's/(ostree=)[^ ]+/\1.../' | sed -E 's/(BOOT_IMAGE=)[^ ]+/\1.../')
@@ -80,7 +81,7 @@ version() {
 }
 
 loadingbar() {
-    /usr/libexec/ostools/loadingbar
+    /usr/libexec/ostools/loadingbar $@
 }
 
 # main function

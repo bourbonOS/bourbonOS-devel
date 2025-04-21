@@ -21,4 +21,5 @@ remove:
     - toolbox
     - sudo
     - sudo-python-plugin
-    - ptyxis
+    - PackageKit
+    - PackageKit-command-not-found
