@@ -1,0 +1,15 @@
+#!/bin/bash
+
+set -oue pipefail
+
+if getent group wheel > /dev/null 2>&1; then
+    echo "Please set your root password."
+    echo "Be careful to not lose this password, otherwise"
+    echo "you will lose root access entirely."
+    sleep 1
+    passwd root
+    grep "^wheel:" /etc/group | cut -d':' -f4 | while IFS=',' read -r user; do
+        gpasswd --delete "$user" wheel
+    done
+    groupdel wheel
+fi

@@ -29,6 +29,7 @@ if [[ -d $HOME_DIR/$TARGET_USER ]]; then
         echo "Remounting..."
         mount -o remount $MAPPER_DIR $HOME_DIR/$TARGET_USER/
         echo "Done."
+        exit 0
     else
         if [[ "$PAM_TYPE" == "open_session" ]]; then
             echo "Unencrypting..."
@@ -37,6 +38,7 @@ if [[ -d $HOME_DIR/$TARGET_USER ]]; then
             mkdir -p $HOME_DIR/$TARGET_USER/
             mount $MAPPER_DIR $HOME_DIR/$TARGET_USER/
             echo "Done."
+            exit 0
         elif [[ "$PAM_TYPE" == "close_session" ]]; then
             echo "Unmounting..."
             umount $HOME_DIR/$TARGET_USER
@@ -44,12 +46,13 @@ if [[ -d $HOME_DIR/$TARGET_USER ]]; then
             echo "Closing HomeFS device..."
             cryptsetup luksClose homefs-decrypted-$TARGET_USER
             echo "Done."
+            exit 0
         else
-            echo "UNKNOWN SESSION TYPE!! Exiting..."
-            exit 1
+            echo "Unknown session type, not handling."
+            exit 0
         fi
     fi
 else
-    echo "No such user $TARGET_USER!! Exiting..."
-    exit 1
+    echo "No such user $TARGET_USER, not handling."
+    exit 0
 fi
