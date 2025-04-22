@@ -1,0 +1,12 @@
+[Unit]
+Description=Overlay filesystem for /nix
+Documentation=man:mount(8)
+DefaultDependencies=no
+After=var.mount
+BindsTo=var.mount
+
+[Mount]
+What=overlay
+Where=/nix
+Type=overlay
+Options=workdir=/var/usrlocal/nixfs/work,upperdir=/var/usrlocal/nixfs/upper,lowerdir=/usr/nix
