@@ -3,4 +3,4 @@ scripts:
   - unprotectsudo.sh
   - repo-setup-lts.sh
   - install-nix.sh
-  - add-pam-homefs.sh
+  - setup-ostools.sh

@@ -2,4 +2,4 @@ type: script
 scripts:
   - unprotectsudo.sh
   - install-nix.sh
-  - add-pam-homefs.sh
+  - setup-ostools.sh
