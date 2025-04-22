@@ -1,0 +1,3 @@
+type: script
+scripts:
+  - setup-extra-pam.sh
