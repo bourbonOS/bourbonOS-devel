@@ -1,7 +1,8 @@
 [Unit]
 Description=Setup ostools on first boot
-After=usr.mount
-BindsTo=usr.mount
+After=local-fs-pre.target
+Before=network.target
+BindsTo=local-fs-pre.target
 DefaultDependencies=no
 
 [Service]

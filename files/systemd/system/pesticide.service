@@ -1,7 +1,7 @@
 [Unit]
 Description=Check integrity of configured directories
-After=usr.mount etc.mount
-BindsTo=usr.mount
+After=local-fs.target
+BindsTo=local-fs.target
 
 [Service]
 Type=oneshot
