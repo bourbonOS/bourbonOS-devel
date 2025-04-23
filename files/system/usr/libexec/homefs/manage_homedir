@@ -3,69 +3,67 @@
 set -oue pipefail
 shopt -s dotglob
 
-TARGET_USER=$PAM_USER
 LOOP_DEV=$(losetup -f)
 HOME_DIR=/var/home
 HOMEFS_DIR=/var/usrlocal/homefs
-MAPPER_DIR=/dev/mapper/homefs-decrypted-$TARGET_USER
+MAPPER_DIR=/dev/mapper/homefs-decrypted-$PAM_USER
 PRODUCT_SKU=$(cat /sys/class/dmi/id/product_sku | tr -d ' ')
 GEN_TMPDIRNAME=$(openssl rand -hex 32)
 
-if ps aux | grep "/usr/libexec/homefs/manage_homedir" | grep -v grep | awk '{print $2}' | wc -l | grep -vq "^1$"; then
-    echo "Another instance is running. Abort."
-    exit 0
-elif ! ps aux | grep "/usr/libexec/homefs/manage_homedir" | grep -v grep | awk '{print $2}' | wc -l | grep -vq "^1$"; then
-    if [[ -d $HOME_DIR/$TARGET_USER ]]; then
-        if [[ ! -f $HOMEFS_DIR/$TARGET_USER.img.homefs ]]; then
-            echo "Creating HomeFS image..."
-            truncate -s "$(df -h "$HOME_DIR" | awk 'NR==2 {print $2}')" $HOMEFS_DIR/$TARGET_USER.img.homefs
-            chown $TARGET_USER:$TARGET_USER $HOMEFS_DIR/$TARGET_USER.img.homefs
-            chmod 700 $HOMEFS_DIR/$TARGET_USER.img.homefs
-            echo "Encrypting image..."
-            keyctl add user $PRODUCT_SKU-homefs-$TARGET_USER "$(openssl rand -base64 12)-$(openssl rand -hex 18)" @u > /dev/null 2>&1
-            losetup $LOOP_DEV $HOMEFS_DIR/$TARGET_USER.img.homefs
-            keyctl search @u user $PRODUCT_SKU-homefs-$TARGET_USER | keyctl pipe $(cat /dev/stdin) | cryptsetup --type luks2 --cipher aes-xts-plain64 luksFormat $LOOP_DEV
-            keyctl search @u user $PRODUCT_SKU-homefs-$TARGET_USER | keyctl pipe $(cat /dev/stdin) | cryptsetup luksOpen $LOOP_DEV homefs-decrypted-$TARGET_USER
-            mkfs.ext4 $MAPPER_DIR -F
-            echo "Mounting..."
-            mkdir -p /tmp/homefs-private-$GEN_TMPDIRNAME/
-            mount $MAPPER_DIR /tmp/homefs-private-$GEN_TMPDIRNAME/
-            echo "Transferring data..."
-            mv $HOME_DIR/$TARGET_USER/* /tmp/homefs-private-$GEN_TMPDIRNAME/
-            rm /tmp/homefs-private-$GEN_TMPDIRNAME/lost+found
-            echo "Remounting..."
-            umount $MAPPER_DIR
-            rmdir /tmp/homefs-private-$GEN_TMPDIRNAME
-            mount $MAPPER_DIR $HOME_DIR/$TARGET_USER/
-            restorecon -RFv $HOME_DIR/$TARGET_USER
-            echo "Done."
-            exit 0
-        else
-            if [[ "$PAM_TYPE" == "open_session" ]]; then
-                echo "Unencrypting..."
-                losetup $LOOP_DEV $HOMEFS_DIR/$TARGET_USER.img.homefs
-                keyctl search @u user $PRODUCT_SKU-homefs-$TARGET_USER | keyctl pipe $(cat /dev/stdin) | cryptsetup luksOpen $LOOP_DEV homefs-decrypted-$TARGET_USER
+if [[ ! ps aux | grep "/usr/libexec/homefs/manage_homedir" | grep -v grep | awk '{print $2}' | wc -l | grep -vq "^1$"]]; then
+    if [[ -d $HOME_DIR/$PAM_USER ]]; then
+        if [[ "$1" == "--mount" ]]; then
+            if [[ ! -f $HOMEFS_DIR/$PAM_USER.img.homefs ]]; then
+                echo "Creating HomeFS image..."
+                truncate -s "$(df -h "$HOME_DIR" | awk 'NR==2 {print $2}')" $HOMEFS_DIR/$PAM_USER.img.homefs
+                chown $PAM_USER:$PAM_USER $HOMEFS_DIR/$PAM_USER.img.homefs
+                chmod 700 $HOMEFS_DIR/$PAM_USER.img.homefs
+                echo "Encrypting image..."
+                keyctl add user $PRODUCT_SKU-homefs-$PAM_USER "$(openssl rand -base64 12)-$(openssl rand -hex 18)" @u > /dev/null 2>&1
+                losetup $LOOP_DEV $HOMEFS_DIR/$PAM_USER.img.homefs
+                keyctl search @u user $PRODUCT_SKU-homefs-$PAM_USER | keyctl pipe $(cat /dev/stdin) | cryptsetup --type luks2 --cipher aes-xts-plain64 luksFormat $LOOP_DEV
+                keyctl search @u user $PRODUCT_SKU-homefs-$PAM_USER | keyctl pipe $(cat /dev/stdin) | cryptsetup luksOpen $LOOP_DEV homefs-decrypted-$PAM_USER
+                mkfs.ext4 $MAPPER_DIR -F
                 echo "Mounting..."
-                mkdir -p $HOME_DIR/$TARGET_USER/
-                mount $MAPPER_DIR $HOME_DIR/$TARGET_USER/
+                mkdir -p /tmp/homefs-private-$GEN_TMPDIRNAME/
+                mount $MAPPER_DIR /tmp/homefs-private-$GEN_TMPDIRNAME/
+                echo "Transferring data..."
+                mv $HOME_DIR/$PAM_USER/* /tmp/homefs-private-$GEN_TMPDIRNAME/
+                rm /tmp/homefs-private-$GEN_TMPDIRNAME/lost+found
+                echo "Remounting..."
+                umount $MAPPER_DIR
+                rmdir /tmp/homefs-private-$GEN_TMPDIRNAME
+                mount $MAPPER_DIR $HOME_DIR/$PAM_USER/
+                restorecon -RFv $HOME_DIR/$PAM_USER
                 echo "Done."
                 exit 0
-            elif [[ "$PAM_TYPE" == "close_session" ]]; then
-                echo "Unmounting..."
-                umount $HOME_DIR/$TARGET_USER
-                rmdir $HOME_DIR/$TARGET_USER
-                echo "Closing HomeFS device..."
-                cryptsetup luksClose homefs-decrypted-$TARGET_USER
-                losetup -d $LOOP_DEV
+            elif [[ -f $HOMEFS_DIR/$PAM_USER.img.homefs ]]; then
+                echo "Unencrypting..."
+                losetup $LOOP_DEV $HOMEFS_DIR/$PAM_USER.img.homefs
+                keyctl search @u user $PRODUCT_SKU-homefs-$PAM_USER | keyctl pipe $(cat /dev/stdin) | cryptsetup luksOpen $LOOP_DEV homefs-decrypted-$PAM_USER
+                echo "Mounting..."
+                mkdir -p $HOME_DIR/$PAM_USER/
+                mount $MAPPER_DIR $HOME_DIR/$PAM_USER/
                 echo "Done."
                 exit 0
             else
-                echo "Unknown session type, not handling."
+                echo "Unknown error. Abort."
                 exit 0
-            fi
+        elif [[ "$1" == "--umount" ]]; then
+            echo "Unmounting..."
+            umount $HOME_DIR/$PAM_USER
+            rmdir $HOME_DIR/$PAM_USER
+            echo "Closing HomeFS device..."
+            cryptsetup luksClose homefs-decrypted-$PAM_USER
+            losetup -d $LOOP_DEV
+            echo "Done."
+            exit 0
+        else
+            echo "No mount arg passed. Abort."
+            exit 0
         fi
     else
-        echo "No such user $TARGET_USER, not handling."
+        echo "No such user $PAM_USER, not handling."
         exit 0
     fi
 else
