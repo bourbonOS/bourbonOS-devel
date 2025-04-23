@@ -18,10 +18,10 @@ if [[ -d $HOME_DIR/$TARGET_USER ]]; then
         chown $TARGET_USER:$TARGET_USER $HOMEFS_DIR/$TARGET_USER.img.homefs
         chmod 700 $HOMEFS_DIR/$TARGET_USER.img.homefs
         echo "Encrypting image..."
-        keyctl add user $PRODUCT_SKU-homefs-$TARGET_USER "$(openssl rand -base64 12)-$(openssl rand -hex 18)" @u
+        keyctl add user $PRODUCT_SKU-homefs-$TARGET_USER "$(openssl rand -base64 12)-$(openssl rand -hex 18)" @u > /dev/null 2>&1
         losetup $LOOP_DEV $HOMEFS_DIR/$TARGET_USER.img.homefs
         keyctl search @u user $PRODUCT_SKU-homefs-$TARGET_USER | keyctl pipe $(cat /dev/stdin) | cryptsetup --type luks2 --cipher aes-xts-plain64 luksFormat $LOOP_DEV
-        keyctl search @u user $PRODUCT_SKU-homefs-$TARGET_USER | keyctl pipe $(cat /dev/stdin) | cryptsetup $LOOP_DEV homefs-decrypted-$TARGET_USER
+        keyctl search @u user $PRODUCT_SKU-homefs-$TARGET_USER | keyctl pipe $(cat /dev/stdin) | cryptsetup luksOpen $LOOP_DEV homefs-decrypted-$TARGET_USER
         mkfs.ext4 $MAPPER_DIR -F
         echo "Mounting..."
         mkdir -p /tmp/homefs-private-$GEN_TMPDIRNAME/
