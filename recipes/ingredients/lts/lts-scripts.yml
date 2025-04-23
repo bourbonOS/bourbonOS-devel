@@ -3,4 +3,3 @@ scripts:
   - unprotectsudo.sh
   - repo-setup-lts.sh
   - install-nix.sh
-  - setup-ostools.sh

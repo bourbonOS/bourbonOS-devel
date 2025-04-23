@@ -1,0 +1,14 @@
+[Unit]
+Description=Setup ostools on first boot
+After=usr.mount
+BindsTo=usr.mount
+DefaultDependencies=no
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/libexec/ostools/setup_ostools
+ExecStartPost=/usr/bin/systemctl disable setup-ostools.service
+
+[Install]
+WantedBy=multi-user.target
