@@ -28,8 +28,11 @@ if [[ -d $HOME_DIR/$TARGET_USER ]]; then
         mount $MAPPER_DIR /tmp/homefs-private-$GEN_TMPDIRNAME/
         echo "Transferring data..."
         mv $HOME_DIR/$TARGET_USER/* /tmp/homefs-private-$GEN_TMPDIRNAME/
+        rm /tmp/homefs-private-$GEN_TMPDIRNAME/lost+found
         echo "Remounting..."
-        mount -o remount $MAPPER_DIR $HOME_DIR/$TARGET_USER/
+        umount $MAPPER_DIR
+        rmdir /tmp/homefs-private-$GEN_TMPDIRNAME
+        mount $MAPPER_DIR $HOME_DIR/$TARGET_USER/
         restorecon -RFv $HOME_DIR/$TARGET_USER
         echo "Done."
         exit 0
