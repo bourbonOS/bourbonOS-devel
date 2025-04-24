@@ -11,4 +11,5 @@ modules:
   - from-file: ingredients/common/packages.yml
   - from-file: ingredients/desktop/gnome-de.yml
   - from-file: ingredients/desktop/gnome-apps.yml
+  - from-file: ingredients/common/homefs.yml
   - type: signing
