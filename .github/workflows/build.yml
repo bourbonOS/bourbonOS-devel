@@ -28,8 +28,8 @@ jobs:
       fail-fast: false # stop GH from cancelling all matrix builds if one fails
       matrix:
         recipe:
-          - images/cherry-base-lts.yml
-          - images/cherry-base-stable.yml
+          - images/cherry-kde-lts.yml
+          - images/cherry-kde-stable.yml
           - images/cherry-gnome-lts.yml
           - images/cherry-gnome-stable.yml
     steps:
