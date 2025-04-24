@@ -10,7 +10,7 @@ echo "$CLOSE_SES" >> /usr/share/authselect/default/sssd/postlogin
 echo "$OPEN_SES" >> /usr/share/authselect/default/local/postlogin
 echo "$CLOSE_SES" >> /usr/share/authselect/default/local/postlogin
 
-cd /tmp/homefs_module
+cd /usr/tmp-homefs-module/
 make install
-rm -rf /tmp/homefs_module
+rm -rf /usr/tmp-homefs-module/
 cd /
