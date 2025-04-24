@@ -2,14 +2,12 @@
 
 set -oue pipefail
 
-if rpm -q gdm > /dev/null; then
-    LOGIN_MANAGER="gdm"
-elif rpm -q sddm > /dev/null; then
-    LOGIN_MANAGER="sddm"
-else
-    echo "No supported login manager detected. Abort."
-    exit 1
-fi
+OPEN_SES="session     required type=open_session                   pam_exec.so /usr/libexec/homefs/manage_homedir	--mount"
+CLOSE_SES="session     required type=close_session                  pam_exec.so /usr/libexec/homefs/manage_homedir	--umount"
 
-echo "session     required type=open_session                   pam_exec.so /usr/libexec/homefs/manage_homedir	--mount" >> /etc/pam.d/$LOGIN_MANAGER
-echo "session     required type=close_session                  pam_exec.so /usr/libexec/homefs/manage_homedir	--umount" >> /etc/pam.d/$LOGIN_MANAGER
+echo "$OPEN_SES" >> /usr/share/authselect/default/sssd/postlogin
+echo "$CLOSE_SES" >> /usr/share/authselect/default/sssd/postlogin
+echo "$OPEN_SES" >> /usr/share/authselect/default/local/postlogin
+echo "$CLOSE_SES" >> /usr/share/authselect/default/local/postlogin
+
+authselect apply-changes
