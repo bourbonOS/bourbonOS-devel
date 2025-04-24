@@ -48,6 +48,7 @@ if [[ -d $HOME_DIR/$PAM_USER ]]; then
         else
             echo "Unknown error. Abort."
             exit 0
+        fi
     elif [[ "$1" == "--umount" ]]; then
         echo "Unmounting..."
         umount $HOME_DIR/$PAM_USER
