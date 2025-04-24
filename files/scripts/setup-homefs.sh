@@ -20,7 +20,7 @@ fi
 for FILE in login sshd remote; do
     echo $OPEN_SES >> /etc/pam.d/$FILE
     echo $CLOSE_SES >> /etc/pam.d/$FILE
-fi
+done
 
 dnf -y install make gcc pam-devel
 
