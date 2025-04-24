@@ -3,7 +3,7 @@
 set -oue pipefail
 
 echo "$(date +%s)" > /etc/last_update_run
-chmod +x -R /tmp/osrelease/*
+chmod +x -R /tmp/misc/*
 
 if cat /etc/os-release | grep 'ID="fedora"' > /dev/null; then
     /tmp/misc/image-info-stable.sh
