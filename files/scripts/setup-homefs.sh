@@ -1,25 +1,27 @@
 #!/usr/bin/env bash
 
 set -oue pipefail
+shopt -s extglob
 
 OPEN_SES="session         required        pam_homefs.so mount"
 CLOSE_SES="session         required        pam_homefs.so unmount"
+PAMDIR="/etc/pam.d"
 
 if rpm -q gdm > /dev/null; then
-    for FILE in /etc/pam.d/gdm-*; do
+    for FILE in "$PAMDIR/gdm-@(!launch-environment)"; do
         echo "$OPEN_SES" >> $FILE
         echo "$CLOSE_SES" >> $FILE
     done
 elif rpm -q sddm > /dev/null; then
-    set -x
-    ls -lah /etc/pam.d
-    set +x
-    exit 1
+    for FILE in $PAMDIR/sddm*; do
+        echo "$OPEN_SES" >> $FILE
+        echo "$CLOSE_SES" >> $FILE
+    done   
 fi
 
 for FILE in login sshd remote; do
-    echo $OPEN_SES >> /etc/pam.d/$FILE
-    echo $CLOSE_SES >> /etc/pam.d/$FILE
+    echo $OPEN_SES >> $PAMDIR/$FILE
+    echo $CLOSE_SES >> $PAMDIR/$FILE
 done
 
 dnf -y install make gcc pam-devel
