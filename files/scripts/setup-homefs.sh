@@ -10,7 +10,11 @@ echo "$CLOSE_SES" >> /usr/share/authselect/default/sssd/postlogin
 echo "$OPEN_SES" >> /usr/share/authselect/default/local/postlogin
 echo "$CLOSE_SES" >> /usr/share/authselect/default/local/postlogin
 
-cd /usr/tmp-homefs-module/
+dnf -y install make gcc pam-devel
+
+cd /usr/homefs-module/
 make install
-rm -rf /usr/tmp-homefs-module/
+rm -rf /usr/homefs-module/
 cd /
+
+dnf -y remove make gcc pam-devel
