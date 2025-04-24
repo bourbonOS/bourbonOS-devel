@@ -4,4 +4,3 @@ system:
     - nix-daemon.socket
     - init-homefs.service
     - sysupdate.timer
-    - setup-ostools.service
