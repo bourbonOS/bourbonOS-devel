@@ -1,6 +1,6 @@
 ---
-name: stem-lambert-stable-devel
-description: BourbonOS hinging on a bash script. GNOME-STABLE edition.
+name: stem-bourbon-stable-devel
+description: BourbonOS hinging on a bash script. KDE-STABLE edition.
 base-image: quay.io/fedora/fedora-bootc
 image-version: 42
 
@@ -9,6 +9,6 @@ modules:
   - from-file: ingredients/common/scripts.yml
   - from-file: ingredients/common/services.yml
   - from-file: ingredients/common/packages.yml
-  - from-file: ingredients/desktop/gnome-de.yml
-  - from-file: ingredients/desktop/gnome-apps.yml
+  - from-file: ingredients/desktop/kde-de.yml
+  - from-file: ingredients/desktop/kde-apps.yml
   - type: signing

@@ -2,13 +2,15 @@ type: dnf
 source: ghcr.io/blue-build/modules/dnf:dnf-module
 group-install:
   packages:
-    - gnome-desktop
+    - kde-desktop
 install:
   packages:
-    - nautilus
-    - gnome-software
+    - dolphin
+    - plasma-discover
+    - spectacle
+    - konsole
+    - ksystemlog
 remove:
   packages:
-    - gnome-system-monitor
-    - gnome-packagekit
+    - plasma-discover-packagekit
     - ptyxis

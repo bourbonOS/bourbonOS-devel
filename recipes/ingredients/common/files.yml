@@ -2,3 +2,5 @@ type: files
 files:
   - source: system
     destination: /
+  - source: misc
+    destination: /tmp/

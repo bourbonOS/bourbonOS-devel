@@ -1,8 +1,9 @@
 type: dnf
 source: ghcr.io/blue-build/modules/dnf:dnf-module
 repos:
-  files:
-    - bourbon-os-stable.repo
+  copr:
+    enable:
+      - chronos/main
 install:
   packages:
     - atuin

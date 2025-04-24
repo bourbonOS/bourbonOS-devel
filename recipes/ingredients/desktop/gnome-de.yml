@@ -11,4 +11,3 @@ remove:
   packages:
     - gnome-system-monitor
     - gnome-packagekit
-    - ptyxis

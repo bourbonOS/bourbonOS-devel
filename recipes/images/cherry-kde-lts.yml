@@ -1,6 +1,6 @@
 ---
-name: stem-lambert-lts-devel
-description: BourbonOS hinging on a bash script. GNOME-LTS edition.
+name: stem-chelan-lts-devel
+description: BourbonOS hinging on a bash script. KDE-LTS edition.
 base-image: quay.io/centos-bootc/centos-bootc
 image-version: stream10
 
@@ -9,6 +9,6 @@ modules:
   - from-file: ingredients/common/scripts.yml
   - from-file: ingredients/common/services.yml
   - from-file: ingredients/common/packages.yml
-  - from-file: ingredients/desktop/gnome-de.yml
-  - from-file: ingredients/desktop/gnome-apps.yml
+  - from-file: ingredients/desktop/kde-de.yml
+  - from-file: ingredients/desktop/kde-apps.yml
   - type: signing

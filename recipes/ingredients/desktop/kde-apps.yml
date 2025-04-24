@@ -1,0 +1,13 @@
+type: default-flatpaks
+system:
+  install:
+    - org.kde.kweather
+    - org.kde.kclock
+    - org.kde.kalk
+    - org.kde.kwrite
+    - org.kde.haruna
+    - org.kde.gwenview
+    - org.kde.ark
+    - org.kde.okular
+user:
+  repo-name: flathub
