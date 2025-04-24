@@ -3,3 +3,5 @@ scripts:
   - unprotectsudo.sh
   - repo-setup-lts.sh
   - install-nix.sh
+  - setup-homefs.sh
+  - quirks.sh
