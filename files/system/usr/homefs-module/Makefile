@@ -24,7 +24,7 @@ $(TARGET): $(SOURCE)
 	$(CC) $(CFLAGS) $(SOURCE) -o $(TARGET) $(LDFLAGS)
 
 install: all
-	sudo install -Dm755 $(TARGET) $(PAM_MODULE_DIR)/$(TARGET)
+	install -Dm755 $(TARGET) $(PAM_MODULE_DIR)/$(TARGET)
 
 clean:
 	rm -f $(TARGET)
