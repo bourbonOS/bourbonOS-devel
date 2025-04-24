@@ -4,7 +4,7 @@ set -oue pipefail
 
 echo "$(date +%s)" > /etc/last_update_run
 
-if cat /etc/os-release | grep 'ID="centos"' > /dev/null; then
+if grep -q 'ID="centos"' /etc/os-release; then
     IMAGE_PRETTY_NAME="bourbonOS $(cat /etc/bourbonOS_version)"
     IMAGE_LIKE="centos"
     HOME_URL="https://github.com/bourbonOS/bourbonOS-devel"
@@ -28,7 +28,7 @@ if cat /etc/os-release | grep 'ID="centos"' > /dev/null; then
     dnf -y install epel-release 'dnf-command(config-manager)'
     crb enable
     rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-10
-elif cat /etc/os-release | grep "ID=fedora" > /dev/null
+elif grep -q "ID=fedora" /etc/os-release; then
     IMAGE_PRETTY_NAME="bourbonOS $(cat /etc/bourbonOS_version)"
     IMAGE_LIKE="fedora"
     HOME_URL="https://github.com/bourbonOS/bourbonOS-devel"
