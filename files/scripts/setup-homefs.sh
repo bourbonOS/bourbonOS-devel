@@ -10,7 +10,7 @@ if rpm -q gdm > /dev/null; then
         echo "$OPEN_SES" >> $FILE
         echo "$CLOSE_SES" >> $FILE
     done
-elif rpm -q sddm > /dev/null
+elif rpm -q sddm > /dev/null; then
     set -x
     ls -lah /etc/pam.d
     set +x
