@@ -8,7 +8,7 @@ CLOSE_SES="session         required        pam_homefs.so unmount"
 PAMDIR="/etc/pam.d"
 
 if rpm -q gdm > /dev/null; then
-    for FILE in "$PAMDIR/gdm-@(!launch-environment)"; do
+    for FILE in $PAMDIR/gdm-!(launch-environment); do
         echo "$OPEN_SES" >> $FILE
         echo "$CLOSE_SES" >> $FILE
     done
@@ -19,9 +19,9 @@ elif rpm -q sddm > /dev/null; then
     done   
 fi
 
-for FILE in login sshd remote; do
-    echo $OPEN_SES >> $PAMDIR/$FILE
-    echo $CLOSE_SES >> $PAMDIR/$FILE
+for ENTRY in login sshd remote; do
+    echo $OPEN_SES >> $PAMDIR/$ENTRY
+    echo $CLOSE_SES >> $PAMDIR/$ENTRY
 done
 
 dnf -y install make gcc pam-devel
