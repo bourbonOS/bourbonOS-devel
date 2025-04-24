@@ -2,9 +2,9 @@
 
 set -oue pipefail
 
-if [[ rpm -q gdm ]]; then
+if rpm -q gdm > /dev/null; then
     LOGIN_MANAGER="gdm"
-elif [[ rpm -q sddm ]]; then
+elif rpm -q sddm > /dev/null; then
     LOGIN_MANAGER="sddm"
 else
     echo "No supported login manager detected. Abort."
