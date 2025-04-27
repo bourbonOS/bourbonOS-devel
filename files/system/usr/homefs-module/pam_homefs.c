@@ -1,10 +1,12 @@
 #include <security/pam_modules.h>
 #include <security/pam_misc.h>
+#include <security/pam_ext.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 #include <syslog.h>
 #include <sys/wait.h>
+#include <unistd.h>
 
 #define OPEN_CMD "/usr/libexec/homefs/manage_homedir --mount"
 #define CLOSE_CMD "/usr/libexec/homefs/manage_homedir --umount"
@@ -13,8 +15,72 @@ static int match_argument(const char *arg, const char *expected) {
     return (strcmp(arg, expected) == 0);
 }
 
-int pam_sm_open_session(pam_handle_t *pamh, int flags,
-                        int argc, const char **argv) {
+static int run_command_with_password(pam_handle_t *pamh, const char *user, const char *password, const char *command_base) {
+    int pipe_fd[2];
+    pid_t pid;
+    int status;
+    char command[1024];
+
+    snprintf(command, sizeof(command), "%s \"%s\"", command_base, user);
+
+    if (pipe(pipe_fd) == -1) {
+        syslog(LOG_ERR, "Failed to create pipe");
+        return PAM_SESSION_ERR;
+    }
+
+    pid = fork();
+    if (pid == -1) {
+        syslog(LOG_ERR, "Failed to fork process");
+        close(pipe_fd[0]);
+        close(pipe_fd[1]);
+        return PAM_SESSION_ERR;
+    } else if (pid == 0) {
+        close(pipe_fd[1]);
+        
+        if (dup2(pipe_fd[0], STDIN_FILENO) == -1) {
+            syslog(LOG_ERR, "Failed to redirect stdin");
+            exit(EXIT_FAILURE);
+        }
+        close(pipe_fd[0]);
+        
+        execl("/bin/sh", "sh", "-c", command, (char *)NULL);
+        
+        syslog(LOG_ERR, "Failed to execute command: %s", command);
+        exit(EXIT_FAILURE);
+    } else {
+        close(pipe_fd[0]);
+        
+        if (password != NULL) {
+            if (write(pipe_fd[1], password, strlen(password)) == -1) {
+                syslog(LOG_ERR, "Failed to write password to pipe");
+                close(pipe_fd[1]);
+                return PAM_SESSION_ERR;
+            }
+            
+            if (write(pipe_fd[1], "\n", 1) == -1) {
+                syslog(LOG_ERR, "Failed to write newline to pipe");
+                close(pipe_fd[1]);
+                return PAM_SESSION_ERR;
+            }
+        }
+        
+        close(pipe_fd[1]);
+        
+        if (waitpid(pid, &status, 0) == -1) {
+            syslog(LOG_ERR, "Error waiting for child process");
+            return PAM_SESSION_ERR;
+        }
+        
+        if (WIFEXITED(status) && WEXITSTATUS(status) != 0) {
+            syslog(LOG_ERR, "Command failed with exit status %d", WEXITSTATUS(status));
+            return PAM_SESSION_ERR;
+        }
+        
+        return PAM_SUCCESS;
+    }
+}
+
+int pam_sm_open_session(pam_handle_t *pamh, int flags, int argc, const char **argv) {
     openlog("pam_homefs", LOG_PID, LOG_AUTH);
 
     int run = 0;
@@ -27,49 +93,38 @@ int pam_sm_open_session(pam_handle_t *pamh, int flags,
 
     if (run) {
         const char *retrieved_user = NULL;
+        const char *password = NULL;
         int retval;
 
         retval = pam_get_user(pamh, &retrieved_user, NULL);
-        if (retval == PAM_SUCCESS && retrieved_user != NULL && *retrieved_user != '\0') {
-            setenv("PAM_USER", retrieved_user, 1);
-            syslog(LOG_INFO, "PAM_USER set successfully", retrieved_user);
-            syslog(LOG_INFO, "Attempting to mount HomeFS.", OPEN_CMD);
-            int status;
-            pid_t pid = fork();
-            if (pid == -1) {
-                syslog(LOG_ERR, "Failed to fork process.");
-                closelog();
-                return PAM_SESSION_ERR;
-            } else if (pid == 0) {
-                execl("/bin/sh", "sh", "-c", OPEN_CMD, (char *)NULL);
-                syslog(LOG_ERR, "Failed to mount! Error: %s", OPEN_CMD);
-                exit(EXIT_FAILURE);
-            } else {
-                if (waitpid(pid, &status, 0) == -1) {
-                    syslog(LOG_ERR, "Error waiting for mount.");
-                    closelog();
-                    return PAM_SESSION_ERR;
-                }
-                if (WIFEXITED(status) && WEXITSTATUS(status) != 0) {
-                    syslog(LOG_ERR, "Mount failed with exit status %d!", WEXITSTATUS(status));
-                    closelog();
-                    return PAM_SESSION_ERR;
-                }
-                syslog(LOG_INFO, "Mount succeeded.");
-            }
-        } else {
-             syslog(LOG_ERR, "Could not set PAM_USER.", pam_strerror(pamh, retval));
-             closelog();
-             return PAM_SESSION_ERR;
+        if (retval != PAM_SUCCESS || retrieved_user == NULL || *retrieved_user == '\0') {
+            syslog(LOG_ERR, "Could not get PAM_USER: %s", pam_strerror(pamh, retval));
+            closelog();
+            return PAM_SESSION_ERR;
         }
+        
+        retval = pam_get_item(pamh, PAM_AUTHTOK, (const void **)&password);
+        if (retval != PAM_SUCCESS || password == NULL) {
+            syslog(LOG_NOTICE, "No password available for user %s", retrieved_user);
+        }
+                
+        syslog(LOG_INFO, "Attempting to mount HomeFS for %s", retrieved_user);
+        
+        retval = run_command_with_password(pamh, retrieved_user, password, OPEN_CMD);
+        if (retval != PAM_SUCCESS) {
+            syslog(LOG_ERR, "Mount failed for %s", retrieved_user);
+            closelog();
+            return retval;
+        }
+        
+        syslog(LOG_INFO, "Mount succeeded for %s", retrieved_user);
     }
 
     closelog();
     return PAM_SUCCESS;
 }
 
-int pam_sm_close_session(pam_handle_t *pamh, int flags,
-                         int argc, const char **argv) {
+int pam_sm_close_session(pam_handle_t *pamh, int flags, int argc, const char **argv) {
     openlog("pam_homefs", LOG_PID, LOG_AUTH);
 
     int run = 0;
@@ -82,43 +137,49 @@ int pam_sm_close_session(pam_handle_t *pamh, int flags,
 
     if (run) {
         const char *retrieved_user = NULL;
+        const char *password = NULL;
         int retval;
 
         retval = pam_get_user(pamh, &retrieved_user, NULL);
-        if (retval == PAM_SUCCESS && retrieved_user != NULL && *retrieved_user != '\0') {
-            setenv("PAM_USER", retrieved_user, 1);
-            syslog(LOG_INFO, "PAM_USER set successfully.", retrieved_user);
-            syslog(LOG_INFO, "Attempting to unmount HomeFS.", CLOSE_CMD);
-            int status;
-            pid_t pid = fork();
-            if (pid == -1) {
-                syslog(LOG_ERR, "Failed to fork process.");
-                closelog();
-                return PAM_SESSION_ERR;
-            } else if (pid == 0) {
-                execl("/bin/sh", "sh", "-c", CLOSE_CMD, (char *)NULL);
-                syslog(LOG_ERR, "Failed to unmount!! Error: %s", CLOSE_CMD);
-                exit(EXIT_FAILURE);
-            } else {
-                if (waitpid(pid, &status, 0) == -1) {
-                    syslog(LOG_ERR, "Error waiting for unmount.");
-                    closelog();
-                    return PAM_SESSION_ERR;
-                }
-                if (WIFEXITED(status) && WEXITSTATUS(status) != 0) {
-                    syslog(LOG_ERR, "Unmount failed with exit status %d!!", WEXITSTATUS(status));
-                    closelog();
-                    return PAM_SESSION_ERR;
-                }
-                syslog(LOG_INFO, "Unmount succeeded.");
-            }
-        } else {
-             syslog(LOG_ERR, "Could not set PAM_USER.", pam_strerror(pamh, retval));
-             closelog();
-             return PAM_SESSION_ERR;
+        if (retval != PAM_SUCCESS || retrieved_user == NULL || *retrieved_user == '\0') {
+            syslog(LOG_ERR, "Could not get PAM_USER: %s", pam_strerror(pamh, retval));
+            closelog();
+            return PAM_SESSION_ERR;
         }
+        
+        retval = pam_get_item(pamh, PAM_AUTHTOK, (const void **)&password);
+        if (retval != PAM_SUCCESS || password == NULL) {
+            syslog(LOG_NOTICE, "No password available for user %s", retrieved_user);
+        }
+                
+        syslog(LOG_INFO, "Attempting to unmount HomeFS for %s", retrieved_user);
+        
+        retval = run_command_with_password(pamh, retrieved_user, password, CLOSE_CMD);
+        if (retval != PAM_SUCCESS) {
+            syslog(LOG_ERR, "Unmount failed for %s", retrieved_user);
+            closelog();
+            return retval;
+        }
+        
+        syslog(LOG_INFO, "Unmount succeeded for %s", retrieved_user);
     }
 
     closelog();
     return PAM_SUCCESS;
+}
+
+int pam_sm_authenticate(pam_handle_t *pamh, int flags, int argc, const char **argv) {
+    return PAM_IGNORE;
+}
+
+int pam_sm_setcred(pam_handle_t *pamh, int flags, int argc, const char **argv) {
+    return PAM_IGNORE;
+}
+
+int pam_sm_acct_mgmt(pam_handle_t *pamh, int flags, int argc, const char **argv) {
+    return PAM_IGNORE;
+}
+
+int pam_sm_chauthtok(pam_handle_t *pamh, int flags, int argc, const char **argv) {
+    return PAM_IGNORE;
 }
