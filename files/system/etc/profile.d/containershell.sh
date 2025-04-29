@@ -20,6 +20,7 @@ cshell() {
     else
         clear
         printf "Starting your shell...\n\n"
+        eval $(atuin init bash)
         exec distrobox-enter cherry-cli
     fi
 }

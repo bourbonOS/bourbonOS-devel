@@ -7,10 +7,8 @@ repos:
 install:
   packages:
     - atuin
-    - util-linux
-    - topgrade
     - distrobox
-    - firefox
+    - chromium
     - rsync
     - unzip
     - alsa-sof-firmware
