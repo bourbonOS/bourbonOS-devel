@@ -103,7 +103,7 @@ case "$1" in
             upgrade)
                 clear
                 echo "Please authorize to start your system upgrade."
-                pkexec /usr/libexec/ostools/update
+                pkexec /usr/libexec/ostools/update --interactive
                 ;;
             status)
                 status
@@ -129,7 +129,7 @@ case "$1" in
                                 echo "Select an image from the list:"
                                 select image in $(cat /etc/containerconf/.cherry/list.txt); do
                                     if [[ -n $image ]]; then
-                                        loadingbar --msg="Creating your container, this may take a second." --cmd="distrobox-assemble create --file "/etc/containerconf/$image.ini""
+                                        loadingbar --msg="Creating your container, this may take a second." --cmd="distrobox-assemble create --file /etc/containerconf/$image.ini"
                                         echo "Done! You can switch to the container using 'cherry branch jump'."
                                         exit 0
                                     else

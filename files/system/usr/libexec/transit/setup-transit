@@ -3,7 +3,7 @@
 set -oue pipefail
 
 truncate -s $(df -h /var/ | tail -n 1 | awk '{print $2}') /var/usrlocal/transit/repo/$1.homedir
-losetup -f /var/usrlocal/transit/repo/$1.homedir /dev/loop0
+losetup -f /dev/loop0 /var/usrlocal/transit/repo/$1.homedir
 
 pass=$(cat /dev/stdin)
 echo $pass | cryptsetup --type luks2 --cipher aes-xts-plain64 luksFormat /dev/loop0

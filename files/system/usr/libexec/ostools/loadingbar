@@ -116,7 +116,7 @@ cleanup() {
 
 run_command() {
 	if [[ -n "$command_to_run" ]]; then
-		eval "$command_to_run" &
+		eval "$command_to_run" &> /dev/null &
 		command_pid=$!
 		wait "$command_pid"
 		command_exit_code=$?

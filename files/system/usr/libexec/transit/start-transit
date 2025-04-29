@@ -2,7 +2,7 @@
 
 set -oue pipefail
 
-losetup -f /var/usrlocal/transit/repo/$1.homedir /dev/loop0
+losetup -f /dev/loop0 /var/usrlocal/transit/repo/$1.homedir
 cat /dev/stdin | cryptsetup luksOpen /dev/loop0 in_transit-$(cat /etc/transit-id)
 
 mount /dev/mapper/in_transit-$(cat /etc/transit-id) /var/usrlocal/transit/main/homelayer
