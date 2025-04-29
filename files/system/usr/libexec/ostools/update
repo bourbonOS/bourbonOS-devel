@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e pipefail
+
 loadingbar() {
     /usr/libexec/ostools/loadingbar $@
 }
@@ -39,21 +41,17 @@ if [[ "$EUID" == "0" ]]; then
             exit 0
         fi
     elif [[ "$1" == "--interactive" ]]; then
-        umsg="!! Updating your system !!"
-
-        set -oue pipefail
         echo "Starting manual upgrade in 3 seconds."
         echo "Press `CTRL+C` to cancel."
         sleep 3
-        loadingbar "$umsg" "Task: Update system" "bootc upgrade" --sysupdate-type
-        loadingbar "$umsg" "Task: Update system flatpaks" "flatpak upgrade --system" --sysupdate-type
-        loadingbar "$umsg" "Task: Update user flatpaks" "for USER in /var/home/*; do su - "$USER" -c "flatpak upgrade --user"; done" --sysupdate-type
-        loadingbar "$umsg" "Task: Fetch Nix channels" "nix-channel --update" --sysupdate-type
-        loadingbar "$umsg" "Task: Update Nix packages" "nix-env --upgrade" --sysupdate-type
-        loadingbar "$umsg" "Task: Clean up" "nix-collect-garbage" --sysupdate-type
+        loadingbar --msg="Task: Update system" --cmd="bootc upgrade" 
+        loadingbar --msg="Task: Update system flatpaks" --cmd="flatpak upgrade --system" 
+        loadingbar --msg="Task: Update user flatpaks" --cmd="for USER in /var/home/*; do su - "$USER" -c "flatpak upgrade --user"; done" 
+        loadingbar --msg="Task: Fetch Nix channels" --cmd="nix-channel --update" 
+        loadingbar --msg="Task: Update Nix packages" --cmd="nix-env --upgrade" 
+        loadingbar --msg="Task: Clean up" --cmd="nix-collect-garbage" 
         notify-send "System Update" "Task finished."
         echo "Update finished."
-        echo "Logs in /tmp/update-logs.tmp."
     else
         echo "No arguments provided."
         exit 1

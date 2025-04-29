@@ -7,12 +7,23 @@
 #include <syslog.h>
 #include <sys/wait.h>
 #include <unistd.h>
+#include <sys/stat.h>
 
-#define OPEN_CMD "/usr/libexec/homefs/manage_homedir --mount"
-#define CLOSE_CMD "/usr/libexec/homefs/manage_homedir --umount"
+#define SETUP_CMD "/usr/libexec/transit/setup-transit"
+#define OPEN_CMD "/usr/libexec/transit/start-transit"
+#define CLOSE_CMD "/usr/libexec/transit/stop-transit"
 
 static int match_argument(const char *arg, const char *expected) {
     return (strcmp(arg, expected) == 0);
+}
+
+static int check_homedir_exists(const char *user) {
+    char path[1024];
+    struct stat st;
+    
+    snprintf(path, sizeof(path), "/var/usrlocal/transit/repo/%s.homedir", user);
+    
+    return (stat(path, &st) == 0);
 }
 
 static int run_command_with_password(pam_handle_t *pamh, const char *user, const char *password, const char *command_base) {
@@ -80,8 +91,39 @@ static int run_command_with_password(pam_handle_t *pamh, const char *user, const
     }
 }
 
+static int run_command(pam_handle_t *pamh, const char *user, const char *command_base) {
+    pid_t pid;
+    int status;
+    char command[1024];
+
+    snprintf(command, sizeof(command), "%s \"%s\"", command_base, user);
+
+    pid = fork();
+    if (pid == -1) {
+        syslog(LOG_ERR, "Failed to fork process");
+        return PAM_SESSION_ERR;
+    } else if (pid == 0) {
+        execl("/bin/sh", "sh", "-c", command, (char *)NULL);
+        
+        syslog(LOG_ERR, "Failed to execute command: %s", command);
+        exit(EXIT_FAILURE);
+    } else {
+        if (waitpid(pid, &status, 0) == -1) {
+            syslog(LOG_ERR, "Error waiting for child process");
+            return PAM_SESSION_ERR;
+        }
+        
+        if (WIFEXITED(status) && WEXITSTATUS(status) != 0) {
+            syslog(LOG_ERR, "Command failed with exit status %d", WEXITSTATUS(status));
+            return PAM_SESSION_ERR;
+        }
+        
+        return PAM_SUCCESS;
+    }
+}
+
 int pam_sm_open_session(pam_handle_t *pamh, int flags, int argc, const char **argv) {
-    openlog("pam_homefs", LOG_PID, LOG_AUTH);
+    openlog("pam_transit", LOG_PID, LOG_AUTH);
 
     int run = 0;
     for (int i = 0; i < argc; i++) {
@@ -107,8 +149,21 @@ int pam_sm_open_session(pam_handle_t *pamh, int flags, int argc, const char **ar
         if (retval != PAM_SUCCESS || password == NULL) {
             syslog(LOG_NOTICE, "No password available for user %s", retrieved_user);
         }
+        
+        if (!check_homedir_exists(retrieved_user)) {
+            syslog(LOG_INFO, "Homedir for %s not found, running setup", retrieved_user);
+            
+            retval = run_command_with_password(pamh, retrieved_user, password, SETUP_CMD);
+            if (retval != PAM_SUCCESS) {
+                syslog(LOG_ERR, "Setup failed for %s", retrieved_user);
+                closelog();
+                return retval;
+            }
+            
+            syslog(LOG_INFO, "Setup succeeded for %s", retrieved_user);
+        }
                 
-        syslog(LOG_INFO, "Attempting to mount HomeFS for %s", retrieved_user);
+        syslog(LOG_INFO, "Attempting to mount transit for %s", retrieved_user);
         
         retval = run_command_with_password(pamh, retrieved_user, password, OPEN_CMD);
         if (retval != PAM_SUCCESS) {
@@ -125,7 +180,7 @@ int pam_sm_open_session(pam_handle_t *pamh, int flags, int argc, const char **ar
 }
 
 int pam_sm_close_session(pam_handle_t *pamh, int flags, int argc, const char **argv) {
-    openlog("pam_homefs", LOG_PID, LOG_AUTH);
+    openlog("pam_transit", LOG_PID, LOG_AUTH);
 
     int run = 0;
     for (int i = 0; i < argc; i++) {
@@ -137,7 +192,6 @@ int pam_sm_close_session(pam_handle_t *pamh, int flags, int argc, const char **a
 
     if (run) {
         const char *retrieved_user = NULL;
-        const char *password = NULL;
         int retval;
 
         retval = pam_get_user(pamh, &retrieved_user, NULL);
@@ -147,14 +201,10 @@ int pam_sm_close_session(pam_handle_t *pamh, int flags, int argc, const char **a
             return PAM_SESSION_ERR;
         }
         
-        retval = pam_get_item(pamh, PAM_AUTHTOK, (const void **)&password);
-        if (retval != PAM_SUCCESS || password == NULL) {
-            syslog(LOG_NOTICE, "No password available for user %s", retrieved_user);
-        }
-                
-        syslog(LOG_INFO, "Attempting to unmount HomeFS for %s", retrieved_user);
+        syslog(LOG_INFO, "Attempting to unmount transit for %s", retrieved_user);
         
-        retval = run_command_with_password(pamh, retrieved_user, password, CLOSE_CMD);
+        // Use the function without password for CLOSE_CMD
+        retval = run_command(pamh, retrieved_user, CLOSE_CMD);
         if (retval != PAM_SUCCESS) {
             syslog(LOG_ERR, "Unmount failed for %s", retrieved_user);
             closelog();

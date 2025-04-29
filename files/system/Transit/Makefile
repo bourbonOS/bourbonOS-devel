@@ -10,8 +10,8 @@ ifeq ($(strip $(PAM_MODULE_DIR)),)
     endif
 endif
 
-TARGET = pam_homefs.so
-SOURCE = pam_homefs.c
+TARGET = pam_transit.so
+SOURCE = pam_transit.c
 CC = gcc
 CFLAGS = -shared -fPIC $(PAM_CFLAGS)
 LDFLAGS = $(PAM_LIBS)

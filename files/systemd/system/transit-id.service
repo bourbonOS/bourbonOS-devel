@@ -1,0 +1,11 @@
+[Unit]
+Description=Initialize Transit ID for this boot
+DefaultDependencies=no
+Before=gdm.service
+
+[Service]
+Type=oneshot
+ExecStart=/bin/echo "$(openssl rand -hex 8)" >> /etc/transit-id
+
+[Install]
+WantedBy=multi-user.target

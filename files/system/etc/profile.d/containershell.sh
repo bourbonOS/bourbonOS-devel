@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e pipefail
+
 cshell() {
     if [[ ! -d "$HOME/.config/containerconf" ]]; then
         clear
@@ -13,7 +15,7 @@ cshell() {
         echo "The shell will open when we are done."
         sleep 1
         mkdir -p $HOME/.config/containerconf
-        /usr/libexec/ostools/loadingbar "Hello there, $USER!" "We are setting up your shell... this might take a second." "distrobox-assemble create --file /etc/containerconf/.cherry/cherry.ini"
+        /usr/libexec/ostools/loadingbar --msg="We are setting up your shell... this might take a second." --cmd="distrobox-assemble create --file /etc/containerconf/.cherry/cherry.ini"
         exec distrobox-enter cherry-cli
     else
         clear

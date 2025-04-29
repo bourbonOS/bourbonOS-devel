@@ -1,0 +1,18 @@
+#!/bin/bash
+
+set -oue pipefail
+
+truncate -s $(df -h /var/ | tail -n 1 | awk '{print $2}') /var/usrlocal/transit/repo/$1.homedir
+losetup -f /var/usrlocal/transit/repo/$1.homedir /dev/loop0
+
+pass=$(cat /dev/stdin)
+echo $pass | cryptsetup --type luks2 --cipher aes-xts-plain64 luksFormat /dev/loop0
+echo $pass | cryptsetup luksOpen /dev/loop0 in_transit-$(cat /etc/transit-id)
+unset pass
+
+mkfs.ext4 -F /dev/mapper/init_transit-$(cat /etc/transit-id)
+
+mount /dev/mapper/in_transit-$(cat /etc/transit-id) /var/usrlocal/transit/main/homelayer
+mount -t overlay overlay -o lowerdir=/var/home/$1,upperdir=/var/usrlocal/transit/main/homelayer,workdir=/var/usrlocal/transit/main/.work /var/home/$1
+
+echo "Mounted at /home/$1" > /etc/transit_status

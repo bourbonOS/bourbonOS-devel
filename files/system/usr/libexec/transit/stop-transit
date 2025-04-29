@@ -1,0 +1,11 @@
+#!/bin/bash
+
+set -oue pipefail
+shopt -s extglob
+
+umount /var/home/$1
+cryptsetup luksClose in_transit-$(cat /etc/transit-id)
+losetup -d /dev/loop0
+rm -rf /var/usrlocal/transit/main/.work/*
+
+rm /etc/transit_status
