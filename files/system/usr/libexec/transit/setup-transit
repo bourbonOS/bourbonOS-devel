@@ -2,17 +2,37 @@
 
 set -oue pipefail
 
+echo "Starting setup."
+
+if [[ -d /var/home/$1/Desktop ]]; then
+    echo "Initialized homedir detected."
+    echo "Placing README..."
+    cat <<EOF
+Your full home directory is on the "base layer."
+This is not **good**, as it **exposes** your data in the situation that an attacker has **full, unencrypted access to your disk**.
+This is also usually the result of **rebasing** to this image.
+You can either fix this issue by opening a terminal and running `base-exec /usr/libexec/ostools/fix-homedir` (recommended),
+or delete this README file and move on. (not recommended)
+Have a nice day!
+EOF > /var/home/$1/README.md
+    echo "Done."
+fi
+
+echo "Creating image..."
 truncate -s $(df -h /var/ | tail -n 1 | awk '{print $2}') /var/usrlocal/transit/repo/$1.homedir
 losetup -f /dev/loop0 /var/usrlocal/transit/repo/$1.homedir
 
-pass=$(cat /dev/stdin)
+echo "Encrypting image..."
+pass=$(cat)
 echo $pass | cryptsetup --type luks2 --cipher aes-xts-plain64 luksFormat /dev/loop0
-echo $pass | cryptsetup luksOpen /dev/loop0 in_transit-$(cat /etc/transit-id)
+echo $pass | cryptsetup luksOpen /dev/loop0 init_transit-$(cat /etc/transit-id)
 unset pass
 
+echo "Formatting image..."
 mkfs.ext4 -F /dev/mapper/init_transit-$(cat /etc/transit-id)
 
-mount /dev/mapper/in_transit-$(cat /etc/transit-id) /var/usrlocal/transit/main/homelayer
-mount -t overlay overlay -o lowerdir=/var/home/$1,upperdir=/var/usrlocal/transit/main/homelayer,workdir=/var/usrlocal/transit/main/.work /var/home/$1
+echo "Cleaning up..."
+cryptsetup luksClose init_transit-$(cat /etc/transit-id)
+losetup -d /dev/loop0
 
-echo "Mounted at /home/$1" > /etc/transit_status
+echo "Setup finished."

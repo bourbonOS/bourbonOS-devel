@@ -9,7 +9,7 @@ cshell() {
         echo "We need to do some post-setup for you to access your shell."
         echo "You will be asked for your password in a few seconds. Be ready!"
         sleep 3
-        pkexec /usr/libexec/ostools/remove_wheel
+        pkexec /usr/libexec/ostools/remove-wheel
         echo "Now, for you to access your shell, we need to set up the default container."
         echo "Don't worry! This wont take long."
         echo "The shell will open when we are done."

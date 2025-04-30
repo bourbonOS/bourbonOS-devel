@@ -2,10 +2,20 @@
 
 set -oue pipefail
 
-losetup -f /dev/loop0 /var/usrlocal/transit/repo/$1.homedir
-cat /dev/stdin | cryptsetup luksOpen /dev/loop0 in_transit-$(cat /etc/transit-id)
+pass=$(cat)
 
+[[ "$(id -u $1)" -lt 1000 || "$1" == "root" ]]; exit 0
+[[ ! -d /var/home/$1 ]]; mkhomedir_helper $1
+[[ ! -f /var/usrlocal/transit/repo/$1.homedir ]]; echo $pass | /usr/libexec/transit/setup-transit $1
+
+echo "Decrypting..."
+losetup -f /dev/loop0 /var/usrlocal/transit/repo/$1.homedir
+echo $pass | cryptsetup luksOpen /dev/loop0 in_transit-$(cat /etc/transit-id)
+
+unset pass
+
+echo "Mounting..."
 mount /dev/mapper/in_transit-$(cat /etc/transit-id) /var/usrlocal/transit/main/homelayer
 mount -t overlay overlay -o lowerdir=/var/home/$1,upperdir=/var/usrlocal/transit/main/homelayer,workdir=/var/usrlocal/transit/main/.work /var/home/$1
 
-echo "Mounted at /home/$1" > /etc/transit_status
+echo "Mounted at /var/home/$1." > tee /etc/transit_status

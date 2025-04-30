@@ -3,9 +3,16 @@
 set -oue pipefail
 shopt -s extglob
 
+[[ "$(id -u $1)" -lt 1000 || "$1" == "root" ]]; exit 0
+[[ ! -d /var/home/$1 ]]; mkhomedir_helper $1
+[[ ! -f /var/usrlocal/transit/repo/$1.homedir ]]; cat | /usr/libexec/transit/setup-transit $1; exit 0
+
+echo "Unmounting..."
+
 umount /var/home/$1
 cryptsetup luksClose in_transit-$(cat /etc/transit-id)
 losetup -d /dev/loop0
 rm -rf /var/usrlocal/transit/main/.work/*
 
 rm /etc/transit_status
+echo "Unmounted /var/home/$1."

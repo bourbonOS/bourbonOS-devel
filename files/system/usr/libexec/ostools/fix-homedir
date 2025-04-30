@@ -1,0 +1,17 @@
+#!/bin/bash
+
+set -e pipefail
+
+echo "Checking for initialized home directories..."
+for HOMEDIR in /var/home/*; do
+    if [[ -d $HOMEDIR/Desktop ]]; then
+        echo "Found homedir $HOMEDIR. Fixing..."
+        for object in "$HOMEDIR"/*; do
+            if ! grep -q "$(basename "$object")" /etc/skel; then
+                mv "$object" /var/usrlocal/transit/main/homelayer/
+            fi
+        done
+    else
+        echo "Skipping user $(basename $HOMEDIR)."
+    fi
+done

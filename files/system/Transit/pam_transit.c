@@ -1,235 +1,175 @@
-#include <security/pam_modules.h>
-#include <security/pam_misc.h>
-#include <security/pam_ext.h>
 #include <stdio.h>
-#include <string.h>
 #include <stdlib.h>
-#include <syslog.h>
-#include <sys/wait.h>
 #include <unistd.h>
-#include <sys/stat.h>
+#include <string.h>
+#include <syslog.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <errno.h>
+#include <security/pam_modules.h>
+#include <security/pam_ext.h>
+#include <security/_pam_macros.h>
 
-#define SETUP_CMD "/usr/libexec/transit/setup-transit"
-#define OPEN_CMD "/usr/libexec/transit/start-transit"
-#define CLOSE_CMD "/usr/libexec/transit/stop-transit"
+#define TRANSIT_OPEN_CMD "/usr/libexec/transit/transit-open"
+#define TRANSIT_CLOSE_CMD "/usr/libexec/transit/transit-close"
 
-static int match_argument(const char *arg, const char *expected) {
-    return (strcmp(arg, expected) == 0);
-}
-
-static int check_homedir_exists(const char *user) {
-    char path[1024];
-    struct stat st;
-    
-    snprintf(path, sizeof(path), "/var/usrlocal/transit/repo/%s.homedir", user);
-    
-    return (stat(path, &st) == 0);
-}
-
-static int run_command_with_password(pam_handle_t *pamh, const char *user, const char *password, const char *command_base) {
+/* Execute command passing username as arg and password via stdin */
+static int execute_command(pam_handle_t *pamh, const char *command, 
+                          const char *username, const char *password)
+{
+    pid_t child_pid;
+    int status;
     int pipe_fd[2];
-    pid_t pid;
-    int status;
-    char command[1024];
-
-    snprintf(command, sizeof(command), "%s \"%s\"", command_base, user);
-
-    if (pipe(pipe_fd) == -1) {
-        syslog(LOG_ERR, "Failed to create pipe");
-        return PAM_SESSION_ERR;
+    
+    /* Create pipe for password transfer */
+    if (pipe(pipe_fd) != 0) {
+        pam_syslog(pamh, LOG_ERR, "Failed to create pipe: %m");
+        return PAM_SYSTEM_ERR;
     }
-
-    pid = fork();
-    if (pid == -1) {
-        syslog(LOG_ERR, "Failed to fork process");
+    
+    /* Fork process */
+    child_pid = fork();
+    if (child_pid == -1) {
+        pam_syslog(pamh, LOG_ERR, "Fork failed: %m");
         close(pipe_fd[0]);
         close(pipe_fd[1]);
-        return PAM_SESSION_ERR;
-    } else if (pid == 0) {
+        return PAM_SYSTEM_ERR;
+    }
+    
+    if (child_pid == 0) {
+        /* Child process */
+        
+        /* Close write end of pipe */
         close(pipe_fd[1]);
         
+        /* Redirect stdin to read from pipe */
         if (dup2(pipe_fd[0], STDIN_FILENO) == -1) {
-            syslog(LOG_ERR, "Failed to redirect stdin");
-            exit(EXIT_FAILURE);
+            pam_syslog(pamh, LOG_ERR, "Failed to redirect stdin: %m");
+            _exit(EXIT_FAILURE);
         }
         close(pipe_fd[0]);
         
-        execl("/bin/sh", "sh", "-c", command, (char *)NULL);
+        /* Execute the command with username as argument */
+        execl(command, command, username, NULL);
         
-        syslog(LOG_ERR, "Failed to execute command: %s", command);
-        exit(EXIT_FAILURE);
-    } else {
-        close(pipe_fd[0]);
-        
-        if (password != NULL) {
-            if (write(pipe_fd[1], password, strlen(password)) == -1) {
-                syslog(LOG_ERR, "Failed to write password to pipe");
-                close(pipe_fd[1]);
-                return PAM_SESSION_ERR;
-            }
-            
-            if (write(pipe_fd[1], "\n", 1) == -1) {
-                syslog(LOG_ERR, "Failed to write newline to pipe");
-                close(pipe_fd[1]);
-                return PAM_SESSION_ERR;
-            }
-        }
-        
-        close(pipe_fd[1]);
-        
-        if (waitpid(pid, &status, 0) == -1) {
-            syslog(LOG_ERR, "Error waiting for child process");
-            return PAM_SESSION_ERR;
-        }
-        
-        if (WIFEXITED(status) && WEXITSTATUS(status) != 0) {
-            syslog(LOG_ERR, "Command failed with exit status %d", WEXITSTATUS(status));
-            return PAM_SESSION_ERR;
-        }
-        
-        return PAM_SUCCESS;
+        /* If we get here, exec failed */
+        pam_syslog(pamh, LOG_ERR, "Failed to execute %s: %m", command);
+        _exit(EXIT_FAILURE);
     }
+    
+    /* Parent process */
+    
+    /* Close read end of pipe */
+    close(pipe_fd[0]);
+    
+    /* Write password to pipe */
+    if (password != NULL) {
+        size_t password_len = strlen(password);
+        ssize_t written = write(pipe_fd[1], password, password_len);
+        
+        if (written < 0 || (size_t)written != password_len) {
+            pam_syslog(pamh, LOG_ERR, "Failed to write password to pipe: %m");
+            close(pipe_fd[1]);
+            return PAM_SYSTEM_ERR;
+        }
+    }
+    
+    /* Close write end of pipe */
+    close(pipe_fd[1]);
+    
+    /* Wait for child to exit */
+    if (waitpid(child_pid, &status, 0) == -1) {
+        pam_syslog(pamh, LOG_ERR, "Wait for child failed: %m");
+        return PAM_SYSTEM_ERR;
+    }
+    
+    /* Check exit status */
+    if (!WIFEXITED(status)) {
+        pam_syslog(pamh, LOG_ERR, "Command terminated abnormally");
+        return PAM_SYSTEM_ERR;
+    }
+    
+    if (WEXITSTATUS(status) != 0) {
+        pam_syslog(pamh, LOG_ERR, "Command failed with status %d", WEXITSTATUS(status));
+        return PAM_SYSTEM_ERR;
+    }
+    
+    return PAM_SUCCESS;
 }
 
-static int run_command(pam_handle_t *pamh, const char *user, const char *command_base) {
-    pid_t pid;
-    int status;
-    char command[1024];
-
-    snprintf(command, sizeof(command), "%s \"%s\"", command_base, user);
-
-    pid = fork();
-    if (pid == -1) {
-        syslog(LOG_ERR, "Failed to fork process");
+/* Open session handler */
+PAM_EXTERN int pam_sm_open_session(pam_handle_t *pamh, int flags,
+                                 int argc, const char **argv)
+{
+    int retval;
+    const char *username = NULL;
+    const char *password = NULL;
+    
+    /* Get username */
+    retval = pam_get_item(pamh, PAM_USER, (const void **)&username);
+    if (retval != PAM_SUCCESS || username == NULL) {
+        pam_syslog(pamh, LOG_ERR, "Cannot get username");
         return PAM_SESSION_ERR;
-    } else if (pid == 0) {
-        execl("/bin/sh", "sh", "-c", command, (char *)NULL);
-        
-        syslog(LOG_ERR, "Failed to execute command: %s", command);
-        exit(EXIT_FAILURE);
-    } else {
-        if (waitpid(pid, &status, 0) == -1) {
-            syslog(LOG_ERR, "Error waiting for child process");
-            return PAM_SESSION_ERR;
-        }
-        
-        if (WIFEXITED(status) && WEXITSTATUS(status) != 0) {
-            syslog(LOG_ERR, "Command failed with exit status %d", WEXITSTATUS(status));
-            return PAM_SESSION_ERR;
-        }
-        
-        return PAM_SUCCESS;
     }
+    
+    /* Get password */
+    retval = pam_get_item(pamh, PAM_AUTHTOK, (const void **)&password);
+    if (retval != PAM_SUCCESS) {
+        pam_syslog(pamh, LOG_ERR, "Cannot get password");
+        return PAM_SESSION_ERR;
+    }
+    
+    /* Execute transit-open command */
+    return execute_command(pamh, TRANSIT_OPEN_CMD, username, password);
 }
 
-int pam_sm_open_session(pam_handle_t *pamh, int flags, int argc, const char **argv) {
-    openlog("pam_transit", LOG_PID, LOG_AUTH);
-
-    int run = 0;
-    for (int i = 0; i < argc; i++) {
-        if (match_argument(argv[i], "mount")) {
-            run = 1;
-            break;
-        }
+/* Close session handler */
+PAM_EXTERN int pam_sm_close_session(pam_handle_t *pamh, int flags,
+                                  int argc, const char **argv)
+{
+    int retval;
+    const char *username = NULL;
+    const char *password = NULL;
+    
+    /* Get username */
+    retval = pam_get_item(pamh, PAM_USER, (const void **)&username);
+    if (retval != PAM_SUCCESS || username == NULL) {
+        pam_syslog(pamh, LOG_ERR, "Cannot get username");
+        return PAM_SESSION_ERR;
     }
-
-    if (run) {
-        const char *retrieved_user = NULL;
-        const char *password = NULL;
-        int retval;
-
-        retval = pam_get_user(pamh, &retrieved_user, NULL);
-        if (retval != PAM_SUCCESS || retrieved_user == NULL || *retrieved_user == '\0') {
-            syslog(LOG_ERR, "Could not get PAM_USER: %s", pam_strerror(pamh, retval));
-            closelog();
-            return PAM_SESSION_ERR;
-        }
-        
-        retval = pam_get_item(pamh, PAM_AUTHTOK, (const void **)&password);
-        if (retval != PAM_SUCCESS || password == NULL) {
-            syslog(LOG_NOTICE, "No password available for user %s", retrieved_user);
-        }
-        
-        if (!check_homedir_exists(retrieved_user)) {
-            syslog(LOG_INFO, "Homedir for %s not found, running setup", retrieved_user);
-            
-            retval = run_command_with_password(pamh, retrieved_user, password, SETUP_CMD);
-            if (retval != PAM_SUCCESS) {
-                syslog(LOG_ERR, "Setup failed for %s", retrieved_user);
-                closelog();
-                return retval;
-            }
-            
-            syslog(LOG_INFO, "Setup succeeded for %s", retrieved_user);
-        }
-                
-        syslog(LOG_INFO, "Attempting to mount transit for %s", retrieved_user);
-        
-        retval = run_command_with_password(pamh, retrieved_user, password, OPEN_CMD);
-        if (retval != PAM_SUCCESS) {
-            syslog(LOG_ERR, "Mount failed for %s", retrieved_user);
-            closelog();
-            return retval;
-        }
-        
-        syslog(LOG_INFO, "Mount succeeded for %s", retrieved_user);
+    
+    /* Get password */
+    retval = pam_get_item(pamh, PAM_AUTHTOK, (const void **)&password);
+    if (retval != PAM_SUCCESS) {
+        pam_syslog(pamh, LOG_WARNING, "Cannot get password during session close");
+        /* Continue anyway - password might not be available at close time */
     }
-
-    closelog();
-    return PAM_SUCCESS;
+    
+    /* Execute transit-close command */
+    return execute_command(pamh, TRANSIT_CLOSE_CMD, username, password);
 }
 
-int pam_sm_close_session(pam_handle_t *pamh, int flags, int argc, const char **argv) {
-    openlog("pam_transit", LOG_PID, LOG_AUTH);
-
-    int run = 0;
-    for (int i = 0; i < argc; i++) {
-        if (match_argument(argv[i], "unmount")) {
-            run = 1;
-            break;
-        }
-    }
-
-    if (run) {
-        const char *retrieved_user = NULL;
-        int retval;
-
-        retval = pam_get_user(pamh, &retrieved_user, NULL);
-        if (retval != PAM_SUCCESS || retrieved_user == NULL || *retrieved_user == '\0') {
-            syslog(LOG_ERR, "Could not get PAM_USER: %s", pam_strerror(pamh, retval));
-            closelog();
-            return PAM_SESSION_ERR;
-        }
-        
-        syslog(LOG_INFO, "Attempting to unmount transit for %s", retrieved_user);
-        
-        // Use the function without password for CLOSE_CMD
-        retval = run_command(pamh, retrieved_user, CLOSE_CMD);
-        if (retval != PAM_SUCCESS) {
-            syslog(LOG_ERR, "Unmount failed for %s", retrieved_user);
-            closelog();
-            return retval;
-        }
-        
-        syslog(LOG_INFO, "Unmount succeeded for %s", retrieved_user);
-    }
-
-    closelog();
-    return PAM_SUCCESS;
-}
-
-int pam_sm_authenticate(pam_handle_t *pamh, int flags, int argc, const char **argv) {
+/* These functions are not implemented since we only handle session events */
+PAM_EXTERN int pam_sm_authenticate(pam_handle_t *pamh, int flags,
+                                 int argc, const char **argv)
+{
     return PAM_IGNORE;
 }
 
-int pam_sm_setcred(pam_handle_t *pamh, int flags, int argc, const char **argv) {
+PAM_EXTERN int pam_sm_setcred(pam_handle_t *pamh, int flags,
+                            int argc, const char **argv)
+{
     return PAM_IGNORE;
 }
 
-int pam_sm_acct_mgmt(pam_handle_t *pamh, int flags, int argc, const char **argv) {
+PAM_EXTERN int pam_sm_acct_mgmt(pam_handle_t *pamh, int flags,
+                              int argc, const char **argv)
+{
     return PAM_IGNORE;
 }
 
-int pam_sm_chauthtok(pam_handle_t *pamh, int flags, int argc, const char **argv) {
+PAM_EXTERN int pam_sm_chauthtok(pam_handle_t *pamh, int flags,
+                              int argc, const char **argv)
+{
     return PAM_IGNORE;
 }
