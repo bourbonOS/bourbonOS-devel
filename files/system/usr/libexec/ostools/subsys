@@ -1,0 +1,75 @@
+#!/bin/bash
+
+start_container() {
+  echo "Starting shared container..."
+
+  if podman container exists subsystem && [ "$(podman inspect -f '{{.State.Running}}' subsystem 2>/dev/null)" = "false" ]; then
+    echo "Container exists but is stopped. Starting it..."
+    podman start subsystem
+  elif ! podman container exists subsystem; then
+    echo "Creating and starting the container..."
+    podman run -d \
+      --name subsystem \
+      -v /home:/home \
+      --security-opt label=disable \
+      localhost/subsystem:latest /sbin/init
+  else
+    echo "Container is already running."
+  fi
+}
+
+stop_container() {
+  echo "Stopping shared container..."
+  if podman container exists subsystem; then
+    podman stop subsystem
+    echo "Container stopped but preserved as requested."
+  else
+    echo "Container is not running."
+  fi
+}
+
+restart_container() {
+  echo "Restarting shared container..."
+  if podman container exists subsystem; then
+    podman stop subsystem
+    podman start subsystem
+    echo "Container restarted."
+  else
+    echo "Container doesn't exist. Creating a new one..."
+    start_container
+  fi
+}
+
+container_status() {
+  if podman container exists subsystem; then
+    echo "Container status:"
+    podman inspect subsystem --format "{{.State.Status}}"
+    echo "Container uptime:"
+    podman inspect subsystem --format "{{.State.StartedAt}}"
+    echo "Connected users:"
+    podman exec subsystem who
+  else
+    echo "Container is not running."
+  fi
+}
+
+case "$1" in
+  start)
+    start_container
+    ;;
+  stop)
+    stop_container
+    ;;
+  restart)
+    restart_container
+    ;;
+  status)
+    container_status
+    ;;
+  *)
+    echo "Usage: $0 {start|stop|restart|status}"
+    exit 1
+    ;;
+esac
+
+exit 0

@@ -3,6 +3,8 @@
 set -oue pipefail
 shopt -s extglob
 
+# setup Transit
+
 echo "session         required        pam_transit.so" >> /usr/share/authselect/default/sssd/postlogin
 echo "session         required        pam_transit.so" >> /usr/share/authselect/default/local/postlogin
 
@@ -21,3 +23,8 @@ rm -rf /Transit
 cd /
 
 dnf -y remove make gcc pam-devel
+
+# setup CLI
+
+chmod 755 /etc/subsystem
+podman build -t localhost/subsystem:latest /etc/subsystem

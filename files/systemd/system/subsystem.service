@@ -1,0 +1,14 @@
+[Unit]
+Description=Manage subsystem
+After=var.mount network.target
+BindsTo=var.mount
+Documentation=https://github.com/containers/podman/tree/main/docs
+
+[Service]
+Type=forking
+RemainAfterExit=true
+ExecStart=/usr/libexec/ostools/subsys start
+ExecStop=/usr/libexec/ostools/subsys stop
+Restart=on-failure
+RestartSec=30s
+TimeoutStartSec=300
