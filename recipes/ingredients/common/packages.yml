@@ -17,6 +17,7 @@ install:
     - iwlegacy-firmware
     - plymouth 
     - plymouth-theme-spinner
+    - pamtester
 remove:
   packages:
     - toolbox
