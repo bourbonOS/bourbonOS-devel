@@ -11,23 +11,14 @@ cshell() {
         sleep 3
         pkexec /usr/libexec/ostools/remove-wheel
         mkdir -p $HOME/.config/containerconf
-        enter-subsystem
+        subsys enter
     else
         clear
         printf "Starting your shell...\n\n"
-        enter-subsystem
+        subsys enter
     fi
 }
 
-enter-subsystem() {
-    podman run --rm -it \
-    -e CONTAINER_USER=$(whoami) \
-    -e CONTAINER_UID=$(id -u) \
-    -e CONTAINER_GID=$(id -g) \
-    -v /var/home/$USER:/home/$USER \
-    --security-opt label=disable \
-    localhost/subsystem:latest $@
-}
 
 if [[ -d /var/home/$USER ]]; then
     if [[ "$TERM" == "xterm-256color" ]]; then

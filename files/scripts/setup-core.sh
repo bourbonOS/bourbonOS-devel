@@ -23,8 +23,3 @@ rm -rf /Transit
 cd /
 
 dnf -y remove make gcc pam-devel
-
-# setup CLI
-
-chmod 755 /etc/subsystem
-podman build -t localhost/subsystem:latest /etc/subsystem
