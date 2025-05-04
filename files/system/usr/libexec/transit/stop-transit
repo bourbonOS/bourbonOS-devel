@@ -3,16 +3,33 @@
 set -oue pipefail
 shopt -s extglob
 
-[[ "$(id -u $1)" -lt 1000 || "$1" == "root" ]]; exit 0
-[[ ! -d /var/home/$1 ]]; mkhomedir_helper $1
-[[ ! -f /var/usrlocal/transit/repo/$1.homedir ]]; cat | /usr/libexec/transit/setup-transit $1; exit 0
+if [[ "$(id -u "$1")" -lt 1000 || "$1" == "root" ]]; then
+    exit 0
+fi
+
+if [[ ! -d /var/home/"$1" ]]; then
+    mkhomedir_helper "$1"
+fi
+
+if [[ ! -f /var/usrlocal/transit/repo/"$1".homedir ]]; then
+    cat | /usr/libexec/transit/setup-transit "$1"
+    exit 0
+fi
+
+LOOPDEV=$(losetup | grep /var/usrlocal/transit/repo/"$1".homedir | cut -d':' -f1)
+
+if [[ -z "$LOOPDEV" ]]; then
+    echo "Error: No loop device found for /var/usrlocal/transit/repo/$1.homedir."
+    exit 1
+fi
 
 echo "Unmounting..."
-
-umount /var/home/$1
+umount /var/home/"$1"
 cryptsetup luksClose in_transit-$(cat /etc/transit-id)
-losetup -d /dev/loop0
-rm -rf /var/usrlocal/transit/main/.work/*
+losetup -d "$LOOPDEV"
 
+echo "Cleaning up..."
+rm -rf /var/usrlocal/transit/main/.work/*
 rm /etc/transit_status
+
 echo "Unmounted /var/home/$1."

@@ -1,64 +1,66 @@
 #!/bin/bash
 
-set -e pipefail
+set -euo pipefail
 
 loadingbar() {
-    /usr/libexec/ostools/loadingbar $@
+    /usr/libexec/ostools/loadingbar "$@"
 }
 
-if [[ "$EUID" == "0" ]]; then
-    if [[ "$1" == "--no-interact" ]]; then
-        if [[ "$2" == "--check-conditions" ]]; then
-            cpu_usage=$(grep 'cpu ' /proc/stat | awk '{usage=($2+$4)*100/($2+$4+$5)} END {print usage}')
-            battery_level=$(cat /sys/class/power_supply/BAT0/capacity)
-            last_run_file="/etc/last_update_run"
-            current_time=$(date +%s)
-            last_run_time=$(cat "$last_run_file" 2>/dev/null || echo 0)
-            one_day_seconds=86400
+if [[ "$EUID" -ne 0 ]]; then
+    echo "Not authorized. Please run as root."
+    exit 1
+fi
 
-            if (( $(echo "$cpu_usage < 20" | bc -l) )) && (( battery_level > 15 )) && (( current_time - last_run_time > one_day_seconds )); then
-                echo "$current_time" > "$last_run_file"
-                set -oue pipefail
-                bootc upgrade
-                subsys pull --force
-                flatpak upgrade --system
-                for USER in /var/home/*; do su - "$USER" -c "flatpak upgrade --user"; done
-                nix-channel --update
-                nix-env --upgrade
-                nix-collect-garbage
-            else
-                echo "Conditions not met: CPU usage, battery level, or time since last run."
-                exit 0
-            fi
-        else
+if [[ "${1:-}" == "--no-interact" ]]; then
+    if [[ "${2:-}" == "--check-conditions" ]]; then
+        cpu_usage=$(grep 'cpu ' /proc/stat | awk '{usage=($2+$4)*100/($2+$4+$5)} END {print usage}')
+        battery_level=$(cat /sys/class/power_supply/BAT0/capacity)
+        last_run_file="/etc/last_update_run"
+        current_time=$(date +%s)
+        last_run_time=$(cat "$last_run_file" 2>/dev/null || echo 0)
+        one_day_seconds=86400
+
+        if (( $(echo "$cpu_usage < 20" | bc -l) )) && (( battery_level > 15 )) && (( current_time - last_run_time > one_day_seconds )); then
+            echo "$current_time" > "$last_run_file"
             set -oue pipefail
             bootc upgrade
+            subsys pull --force
             flatpak upgrade --system
             for USER in /var/home/*; do su - "$USER" -c "flatpak upgrade --user"; done
             nix-channel --update
             nix-env --upgrade
             nix-collect-garbage
-            echo "Done."
+        else
+            echo "Conditions not met: CPU usage, battery level, or time since last run."
             exit 0
         fi
-    elif [[ "$1" == "--interactive" ]]; then
-        echo "Starting manual upgrade in 3 seconds."
-        echo "Press `CTRL+C` to cancel."
-        sleep 3
-        loadingbar --msg="Task: Update system" --cmd="bootc upgrade"
-        loadingbar --msg="Task: Update subsystem" --cmd="subsys pull --force" 
-        loadingbar --msg="Task: Update system flatpaks" --cmd="flatpak upgrade --system" 
-        loadingbar --msg="Task: Update user flatpaks" --cmd="for USER in /var/home/*; do su - "$USER" -c "flatpak upgrade --user"; done" 
-        loadingbar --msg="Task: Fetch Nix channels" --cmd="nix-channel --update" 
-        loadingbar --msg="Task: Update Nix packages" --cmd="nix-env --upgrade" 
-        loadingbar --msg="Task: Clean up" --cmd="nix-collect-garbage" 
-        notify-send "System Update" "Task finished."
-        echo "Update finished."
     else
-        echo "No arguments provided."
-        exit 1
+        set -oue pipefail
+        bootc upgrade
+        flatpak upgrade --system
+        for USER in /var/home/*; do su - "$USER" -c "flatpak upgrade --user"; done
+        nix-channel --update
+        nix-env --upgrade
+        nix-collect-garbage
+        echo "Done."
+        exit 0
     fi
+elif [[ "${1:-}" == "--interactive" ]]; then
+    echo "Starting manual upgrade in 3 seconds."
+    echo "Press CTRL+C to cancel."
+    sleep 3
+    loadingbar --msg="Task: Update system" --cmd="bootc upgrade"
+    loadingbar --msg="Task: Update subsystem" --cmd="subsys pull --force"
+    loadingbar --msg="Task: Update system flatpaks" --cmd="flatpak upgrade --system"
+    for USER in /var/home/*; do
+        loadingbar --msg="Task: Update user flatpaks for $USER" --cmd="su - \"$USER\" -c \"flatpak upgrade --user\""
+    done
+    loadingbar --msg="Task: Fetch Nix channels" --cmd="nix-channel --update"
+    loadingbar --msg="Task: Update Nix packages" --cmd="nix-env --upgrade"
+    loadingbar --msg="Task: Clean up" --cmd="nix-collect-garbage"
+    notify-send "System Update" "Task finished."
+    echo "Update finished."
 else
-    echo "Not authorized. Please run as root."
+    echo "No valid arguments provided."
     exit 1
 fi

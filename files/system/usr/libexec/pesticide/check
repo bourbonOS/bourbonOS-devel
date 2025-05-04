@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -euo pipefail
+
 hash_dirs() {
     local hashfile="$1"
 
@@ -50,33 +52,30 @@ main() {
         hash_dirs "$dirs_hash"
         touch "$setup_lock"
         exit 0
-    else
-        if [[ "$(deployment_status)" != "0" ]]; then
-            echo "An update has been applied. Regenerating hashes..."
-            [[ -f "$dirs_hash" ]] && rm "$dirs_hash"
-            hash_dirs "$dirs_hash"
-            echo "STATUS=OK" > "$status_file"
-            echo "Hashes regenerated."
-            exit 0
-        elif [[ -f "$setup_lock" ]]; then
-            echo "Checking hashes..."
-            hash_dirs "$temp_hash"
-            if diff "$temp_hash" "$dirs_hash" > /dev/null; then
-                echo "OK"
-                echo "STATUS=OK" > "$status_file"
-                rm "$temp_hash"
-                exit 0
-            else
-                echo "TAINTED"
-                echo "STATUS=TAINTED" > "$status_file"
-                rm "$temp_hash"
-                exit 1
-            fi
-        fi
     fi
 
-    echo "Unknown error."
-    exit 1
+    if [[ "$(deployment_status)" != "0" ]]; then
+        echo "An update has been applied. Regenerating hashes..."
+        [[ -f "$dirs_hash" ]] && rm "$dirs_hash"
+        hash_dirs "$dirs_hash"
+        echo "STATUS=OK" > "$status_file"
+        echo "Hashes regenerated."
+        exit 0
+    fi
+
+    echo "Checking hashes..."
+    hash_dirs "$temp_hash"
+    if diff "$temp_hash" "$dirs_hash" > /dev/null; then
+        echo "OK"
+        echo "STATUS=OK" > "$status_file"
+        rm "$temp_hash"
+        exit 0
+    else
+        echo "TAINTED"
+        echo "STATUS=TAINTED" > "$status_file"
+        rm "$temp_hash"
+        exit 1
+    fi
 }
 
 main "$@"

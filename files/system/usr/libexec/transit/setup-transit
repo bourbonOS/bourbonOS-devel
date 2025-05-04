@@ -4,7 +4,7 @@ set -oue pipefail
 
 echo "Starting setup."
 
-if [[ -d /var/home/$1/Desktop ]]; then
+if [[ -d /var/home/"$1"/Desktop ]]; then
     echo "Initialized homedir detected."
     echo "Placing README..."
     cat <<EOF
@@ -14,18 +14,18 @@ This is also usually the result of **rebasing** to this image.
 You can either fix this issue by opening a terminal and running `base-exec /usr/libexec/ostools/fix-homedir` (recommended),
 or delete this README file and move on. (not recommended)
 Have a nice day!
-EOF > /var/home/$1/README.md
+EOF > /var/home/"$1"/README.md
     echo "Done."
 fi
 
 echo "Creating image..."
-truncate -s $(df -h /var/ | tail -n 1 | awk '{print $2}') /var/usrlocal/transit/repo/$1.homedir
-losetup -f /dev/loop0 /var/usrlocal/transit/repo/$1.homedir
+truncate -s $(df -h /var/ | tail -n 1 | awk '{print $2}') /var/usrlocal/transit/repo/"$1".homedir
+losetup /dev/loop0 /var/usrlocal/transit/repo/$1.homedir
 
 echo "Encrypting image..."
 pass=$(cat)
-echo $pass | cryptsetup --type luks2 --cipher aes-xts-plain64 luksFormat /dev/loop0
-echo $pass | cryptsetup luksOpen /dev/loop0 init_transit-$(cat /etc/transit-id)
+echo "$pass" | cryptsetup --type luks2 --cipher aes-xts-plain64 luksFormat /dev/loop0
+echo "$pass" | cryptsetup luksOpen /dev/loop0 init_transit-$(cat /etc/transit-id)
 unset pass
 
 echo "Formatting image..."

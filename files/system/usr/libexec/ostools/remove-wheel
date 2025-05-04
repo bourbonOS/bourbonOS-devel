@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -oue pipefail
+set -euo pipefail
 
 if getent group wheel > /dev/null 2>&1; then
     echo "Please set your root password."
@@ -8,8 +8,14 @@ if getent group wheel > /dev/null 2>&1; then
     echo "you will lose root access entirely."
     sleep 1
     passwd root
-    grep "^wheel:" /etc/group | cut -d':' -f4 | while IFS=',' read -r user; do
-        gpasswd --delete "$user" wheel
-    done
+    users=$(grep "^wheel:" /etc/group | cut -d':' -f4)
+    if [[ -n "$users" ]]; then
+        IFS=',' read -ra user_array <<< "$users"
+        for user in "${user_array[@]}"; do
+            gpasswd --delete "$user" wheel
+        done
+    fi
     groupdel wheel
+else
+    echo "Group 'wheel' does not exist."
 fi
