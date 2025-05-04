@@ -19,6 +19,11 @@ fi
 echo "Associating device..."
 LOOPDEV=$(losetup -f --show /var/usrlocal/transit/repo/"$1".homedir)
 
+if [[ -z "$LOOPDEV" ]]; then
+    echo "Error: No loop device found for /var/usrlocal/transit/repo/$1.homedir."
+    exit 1
+fi
+
 echo "Decrypting..."
 echo "$pass" | cryptsetup luksOpen "$LOOPDEV" in_transit-$(cat /etc/transit-id)
 
