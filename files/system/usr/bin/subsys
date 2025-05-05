@@ -44,7 +44,10 @@ wait_for_start() {
 }
 
 start_container() {
-    [[ pgrep -x "subsys pull" ]] && echo "Subsystem is being pulled..." && wait_for_pull
+    if pgrep -x "subsys pull"; then
+        echo "Subsystem is being pulled..."
+        wait_for_pull
+    fi
 
     echo "Starting subsystem container..."
 
@@ -120,8 +123,13 @@ pull_image() {
 }
 
 enter_container() {
-    [[ pgrep -x "subsys pull" ]] && echo "Subsystem is being pulled..." && wait_for_pull
-    [[ pgrep -x "subsys start" ]] && echo "Subsystem is starting..." && wait_for_start
+    if pgrep -x "subsys pull"; then
+        echo "Subsystem is being pulled..."
+        wait_for_pull
+    elif pgrep -x "subsys start"; then
+        echo "Subsystem is starting..."
+        wait_for_start
+    fi
 
     if ! podman container exists "$CONTAINER_NAME" || ! podman inspect --format '{{.State.Running}}' "$CONTAINER_NAME" | grep -q "true"; then
         echo "Error: The subsystem is not running."
