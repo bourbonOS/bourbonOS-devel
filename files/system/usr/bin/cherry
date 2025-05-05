@@ -63,7 +63,7 @@ EOF
 
 status() {
     local TRANSIT_STATUS="Not mounted"
-    [[ -f /etc/transit_status ]] && TRANSIT_STATUS=$(cat /etc/transit_status)
+    [[ -f /etc/transit/transit-status ]] && TRANSIT_STATUS=$(cat /etc/transit/transit-status)
     cat <<EOF
 bourbonOS $(cat /etc/bourbonOS_version)
 Pesticide: $(/usr/libexec/pesticide/status) | $(/usr/libexec/pesticide/version)

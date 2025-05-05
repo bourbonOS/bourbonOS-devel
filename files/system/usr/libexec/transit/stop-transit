@@ -7,10 +7,6 @@ if [[ "$(id -u "$1")" -lt 1000 || "$1" == "root" ]]; then
     exit 0
 fi
 
-if [[ ! -d /var/home/"$1" ]]; then
-    mkhomedir_helper "$1"
-fi
-
 if [[ ! -f /var/usrlocal/transit/repo/"$1".homedir ]]; then
     cat | /usr/libexec/transit/setup-transit "$1"
     exit 0
@@ -24,12 +20,12 @@ if [[ -z "$LOOPDEV" ]]; then
 fi
 
 echo "Unmounting..."
-umount /var/home/"$1"
-cryptsetup luksClose in_transit-$(cat /etc/transit-id)
+umount /var/home
+umount /var/usrlocal/transit/varhome
+cryptsetup luksClose in_transit-$(cat /etc/transit/transit-id)
 losetup -d "$LOOPDEV"
 
 echo "Cleaning up..."
-rm -rf /var/usrlocal/transit/main/.work/*
-rm /etc/transit_status
+rm /etc/transit/transit-status
 
 echo "Unmounted /var/home/$1."

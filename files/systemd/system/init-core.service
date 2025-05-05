@@ -1,8 +1,8 @@
 [Unit]
 Description=Setup core system daemons/services
 DefaultDependencies=no
-After=var.mount
-BindsTo=var.mount
+Before=gdm.service
+BindsTo=var.mount nix.mount
 
 [Service]
 Type=oneshot

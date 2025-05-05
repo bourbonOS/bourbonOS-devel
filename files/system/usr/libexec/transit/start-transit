@@ -8,10 +8,6 @@ if [[ "$(id -u "$1")" -lt 1000 || "$1" == "root" ]]; then
     exit 0
 fi
 
-if [[ ! -d /var/home/"$1" ]]; then
-    mkhomedir_helper "$1"
-fi
-
 if [[ ! -f /var/usrlocal/transit/repo/"$1".homedir ]]; then
     echo "$pass" | /usr/libexec/transit/setup-transit "$1"
 fi
@@ -25,12 +21,12 @@ if [[ -z "$LOOPDEV" ]]; then
 fi
 
 echo "Decrypting..."
-echo "$pass" | cryptsetup luksOpen "$LOOPDEV" in_transit-$(cat /etc/transit-id)
+echo "$pass" | cryptsetup luksOpen "$LOOPDEV" in_transit-$(cat /etc/transit/transit-id)
 
 unset pass
 
 echo "Mounting..."
-mount /dev/mapper/in_transit-$(cat /etc/transit-id) /var/usrlocal/transit/main/homelayer
-mount -t overlay overlay -o lowerdir=/var/home/"$1",upperdir=/var/usrlocal/transit/main/homelayer,workdir=/var/usrlocal/transit/main/.work /var/home/"$1"
+mount --bind -o ro /var/home /var/usrlocal/transit/varhome
+mount /dev/mapper/in_transit-$(cat /etc/transit/transit-id) /var/home
 
-echo "Mounted at /var/home/$1." | tee /etc/transit_status
+echo "Mounted at /var/home/$1." | tee /etc/transit/transit-status

@@ -4,9 +4,9 @@ DefaultDependencies=no
 Before=gdm.service
 
 [Service]
-RemainAfterExit=false
-ExecStart=/bin/echo "$(openssl rand -hex 8)" > /etc/transit-id
-ExecStop=/bin/echo "Not initialized" > /etc/transit-id
+RemainAfterExit=true
+ExecStart=/bin/echo "$(openssl rand -hex 8)" > /etc/transit/transit-id
+ExecStop=/bin/echo "Not initialized" > /etc/transit/transit-id
 
 [Install]
 WantedBy=multi-user.target
