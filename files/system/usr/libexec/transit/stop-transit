@@ -3,12 +3,7 @@
 set -oue pipefail
 shopt -s extglob
 
-if [[ "$(id -u "$1")" -lt 1000 || "$1" == "root" ]]; then
-    exit 0
-fi
-
-if [[ ! -f /var/usrlocal/transit/repo/"$1".homedir ]]; then
-    cat | /usr/libexec/transit/setup-transit "$1"
+if [[ "$(id -u "$1")" -lt 1000 || "$1" == "root" || ! -f /var/usrlocal/transit/repo/"$1".homedir ]]; then
     exit 0
 fi
 
