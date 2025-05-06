@@ -62,7 +62,7 @@ EOF
 }
 
 status() {
-    local TRANSIT_STATUS="Not mounted"
+    local TRANSIT_STATUS="NOT_MOUNTED"
     [[ -f /etc/transit/transit-status ]] && TRANSIT_STATUS=$(cat /etc/transit/transit-status)
     cat <<EOF
 bourbonOS $(cat /etc/bourbonOS_version)
@@ -79,7 +79,7 @@ EOF
 }
 
 version() {
-    echo "cherry v3.1.4"
+    echo "cherry v3.1.5"
 }
 
 loadingbar() {

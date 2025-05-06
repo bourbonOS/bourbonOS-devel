@@ -3,7 +3,7 @@
 set -oue pipefail
 shopt -s extglob
 
-if [[ "$(id -u "$1")" -lt 1000 || "$1" == "root" || ! -f /var/usrlocal/transit/repo/"$1".homedir ]]; then
+if [[ "$(id -u "$1")" -lt 1000 || ! -f /var/usrlocal/transit/repo/"$1".homedir ]]; then
     exit 0
 fi
 
@@ -14,7 +14,7 @@ if [[ -z "$LOOPDEV" ]]; then
     exit 1
 fi
 
-echo "Unmounting..."
+echo "Unmounting image..."
 umount /var/home
 umount /var/usrlocal/transit/varhome
 cryptsetup luksClose in_transit-$(cat /etc/transit/transit-id)
@@ -23,4 +23,4 @@ losetup -d "$LOOPDEV"
 echo "Cleaning up..."
 rm /etc/transit/transit-status
 
-echo "Unmounted /var/home/$1."
+echo "Unmounted image successfully."
