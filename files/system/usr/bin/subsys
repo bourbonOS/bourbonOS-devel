@@ -113,7 +113,7 @@ status_container() {
 }
 
 pull_image() {
-    if [[ ! podman container exists "$CONTAINER_NAME" || "$1" == "--force" ]]; then
+    if [[ ! $(podman container exists "$CONTAINER_NAME") || "$1" == "--force" ]]; then
         echo "Pulling latest image..."
         podman pull "$CONTAINER_IMAGE"
         echo "Subsystem updated successfully."
