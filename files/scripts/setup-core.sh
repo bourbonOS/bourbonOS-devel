@@ -3,9 +3,6 @@
 set -oue pipefail
 shopt -s extglob
 
-systemctl daemon-reload
-systemctl enable subsystem.service
-
 echo "session         required        pam_transit.so" >> /usr/share/authselect/default/sssd/postlogin
 echo "session         required        pam_transit.so" >> /usr/share/authselect/default/local/postlogin
 
