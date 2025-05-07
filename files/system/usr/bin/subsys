@@ -2,180 +2,89 @@
 
 set -e pipefail
 
-CONTAINER_NAME="subsystem"
-CONTAINER_IMAGE="ghcr.io/bourbonos/subsystem:latest"
-SOCKET_PATH="/var/run/subsystem.sock"
-
-require_root() {
-    local cmd="$1"
-    case "$cmd" in
-        start|stop|restart|status|pull)
-            if [ "$(id -u)" -ne 0 ]; then
-                echo "Error: The '$cmd' command requires root privileges."
-                echo "Please run: pkexec $(basename "$0") $cmd"
-                exit 1
-            fi
-            ;;
-        enter)
-            ;;
-        *)
-            ;;
-    esac
-}
-
-wait_for_pull() {
-    while pgrep -x "subsys pull"; do
-        wait $(pgrep -x "subsys pull")
-        if [[ $? -ne 0 ]]; then
-            echo "Subsystem pull failed."
-            exit 1
-        fi
-    done
-}
-
-wait_for_start() {
-    while pgrep -x "subsys start"; do
-        wait $(pgrep -x "subsys pull")
-        if [[ $? -ne 0 ]]; then
-            echo "Subsystem start failed."
-            exit 1
-        fi
-    done
-}
-
-start_container() {
-    if pgrep -x "subsys pull"; then
-        echo "Subsystem is being pulled..."
-        wait_for_pull
-    fi
-
-    echo "Starting subsystem container..."
-
-    if podman container exists "$CONTAINER_NAME"; then
-        echo "Container already exists, starting it..."
-        podman start "$CONTAINER_NAME"
-        return
-    fi
-    
-    podman run -d --name "$CONTAINER_NAME" \
-        --uidmap="0:0:1" \
-        --uidmap="1:1:65535" \
-        --publish "$SOCKET_PATH:$SOCKET_PATH" \
-        --security-opt label=disable \
-        --annotation run.oci.keep_original_groups=1 \
-        -v /etc/passwd:/etc/passwd:ro \
-        -v /etc/group:/etc/group:ro \
-        -v /etc/shadow:/etc/shadow:ro \
-        -v /home:/home \
-        "$CONTAINER_IMAGE"
-    
-    chmod 777 "$SOCKET_PATH"
-    
-    echo "Subsystem started successfully."
-}
-
-stop_container() {
-    echo "Stopping subsystem container..."
-    if podman container exists "$CONTAINER_NAME"; then
-        RUNNING=$(podman inspect --format '{{.State.Running}}' "$CONTAINER_NAME")
-        if [[ "$RUNNING" = "true" ]]; then
-            podman stop "$CONTAINER_NAME"
-            echo "Subsystem stopped successfully."
+is_container_stopped() {
+    if podman container exists subsystem; then
+        local state=$(podman inspect --format '{{.State.Status}}' subsystem 2>/dev/null)
+        if [ "$state" = "running" ]; then
+            return 1
         else
-            echo "Subsystem is not running."
-            exit 1
+            return 0
         fi
     else
-        echo "Subsystem does not exist."
-        exit 2
+        return 0
     fi
 }
 
-restart_container() {
-    stop_container
-    start_container
-}
-
-status_container() {
-    if podman container exists "$CONTAINER_NAME"; then
-        RUNNING=$(podman inspect --format '{{.State.Running}}' "$CONTAINER_NAME")
-        if [[ "$RUNNING" = "true" ]]; then
-            echo "Subsystem is running."
-            podman ps -f name="$CONTAINER_NAME" --format "ID: {{.ID}}\nImage: {{.Image}}\nCreated: {{.Created}}\nStatus: {{.Status}}"
-        else
-            echo "Subsystem exists but is not running."
-            exit 1
-        fi
+perform_action() {
+    local action=$1
+    
+    if [ "$(id -u)" -ne 0 ]; then
+        pkexec systemctl $action subsystem.service
     else
-        echo "Subsystem does not exist."
-        exit 2
+        systemctl $action subsystem.service
     fi
-}
-
-pull_image() {
-    if [[ ! $(podman container exists "$CONTAINER_NAME") || "$1" == "--force" ]]; then
-        echo "Pulling latest image..."
-        podman pull "$CONTAINER_IMAGE"
-        echo "Subsystem updated successfully."
-    else
-        echo "Subsystem has already been pulled."
-    fi
-}
-
-enter_container() {
-    if pgrep -x "subsys pull"; then
-        echo "Subsystem is being pulled..."
-        wait_for_pull
-    elif pgrep -x "subsys start"; then
-        echo "Subsystem is starting..."
-        wait_for_start
-    fi
-
-    if ! podman container exists "$CONTAINER_NAME" || ! podman inspect --format '{{.State.Running}}' "$CONTAINER_NAME" | grep -q "true"; then
-        echo "Error: The subsystem is not running."
-        echo "Please ask an administrator to start it with: 'pkexec $(basename "$0") start'."
-        exit 1
-    fi
-    
-    USER_ID=$(id -u)
-    USER_HOME="$HOME"
-    
-    echo "Entering container as user: $CURRENT_USER"
-    
-    exec podman exec -it \
-        --user "$USER_ID" \
-        --workdir "$USER_HOME" \
-        -e HOME="$USER_HOME" \
-        -e USER="$USER" \
-        "$CONTAINER_NAME" /bin/bash
 }
 
 case "$1" in
     start)
-        require_root "start"
-        start_container
+        if is_container_stopped; then
+            echo "Starting subsystem..."
+            perform_action start
+        else
+            echo "Subsystem is already running."
+        fi
         ;;
     stop)
-        require_root "stop"
-        stop_container
+        if ! is_container_stopped; then
+            echo "Stopping subsystem..."
+            perform_action stop
+        else
+            echo "Subsytem is already stopped."
+        fi
         ;;
     restart)
-        require_root "restart"
-        restart_container
+        echo "Restarting subsystem..."
+        perform_action restart
         ;;
     status)
-        require_root "status"
-        status_container
-        ;;
-    pull)
-        require_root "pull"
-        pull_image $2
+        echo "Subsystem status:"
+        if is_container_stopped; then
+            echo "Subsystem is stopped."
+            systemctl status container-subsystem.service
+        else
+            echo "Subsystem is running."
+            systemctl status container-subsystem.service
+        fi
         ;;
     enter)
-        enter_container
+        if is_container_stopped; then
+            echo "Subsystem is stopped. Starting it now..."
+            perform_action start
+            sleep 2
+        fi
+        
+        echo "Entering subsystem as $(whoami)..."
+        podman exec -it \
+            --user $(id -u):$(id -g) \
+            --env HOME=$HOME \
+            --workdir $HOME \
+            subsystem /bin/sh -c "cd $HOME && exec \$(getent passwd \$(id -un) | cut -d: -f7)"
+        ;;
+    logs)
+        echo "Showing subsystem container logs:"
+        journalctl -u container-subsystem.service
+        ;;
+    is-stopped)
+        if is_container_stopped; then
+            echo "Container 'subsystem' is stopped."
+            exit 0
+        else
+            echo "Container 'subsystem' is running."
+            exit 1
+        fi
         ;;
     *)
-        echo "Usage: $0 {start|stop|restart|status|pull (--force)|enter}"
+        echo "Usage: subsystem-ctl [start|stop|restart|status|enter|logs|is-stopped]"
         exit 1
         ;;
 esac

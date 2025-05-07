@@ -2,8 +2,8 @@
 
 set -oue pipefail
 
-mkdir -p /var/usrlocal/{transit/{varhome,repo,backup},nixfs/{upper,work}}
-chown root:root /var/usrlocal/{transit/{varhome,repo,backup},nixfs/{upper,work}}
+mkdir -p /var/{usrlocal,lib/subsystem}/{transit/{varhome,repo,backup},nixfs/{upper,work}}
+chown root:root /var/{usrlocal,lib/subsystem}/{transit/{varhome,repo,backup},nixfs/{upper,work}}
 chmod 700 /var/usrlocal/{transit/{varhome,repo,backup},nixfs/{upper,work}}
 
 semanage fcontext -a -t etc_t "/usr(/local/nixfs/upper)?/nix/store/[^/]+/etc(/.*)?"

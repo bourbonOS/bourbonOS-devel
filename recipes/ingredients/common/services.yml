@@ -5,3 +5,6 @@ system:
     - init-core.service
     - transit-id.service
     - sysupdate.timer
+user:
+  enabled:
+    - transit-backup.timer

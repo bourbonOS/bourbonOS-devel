@@ -8,7 +8,7 @@ for HOMEDIR in /var/home/*; do
         echo "Found homedir $HOMEDIR. Fixing..."
         for object in "$HOMEDIR"/*; do
             if ! grep -q "$(basename "$object")" /etc/skel; then
-                mv "$object" /var/usrlocal/transit/main/homelayer/
+                mv "$object" "$transit_dir"/main/homelayer/
             fi
         done
     else

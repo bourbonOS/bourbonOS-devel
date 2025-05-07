@@ -1,0 +1,11 @@
+[Unit]
+Description=Run transit backup twice daily
+
+[Timer]
+Unit=transit-backup.service
+OnCalendar=*-*-* 09:00:00
+OnCalendar=*-*-* 18:00:00
+Persistent=true
+
+[Install]
+WantedBy=timers.target

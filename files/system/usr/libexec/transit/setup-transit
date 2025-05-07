@@ -10,6 +10,7 @@ fi
 echo "Starting setup."
 pass=$(cat)
 set_readme="false"
+transit_dir="/var/usrlocal/transit"
 
 if [[ -d /var/home/"$1"/Desktop ]]; then
     echo "Initialized homedir detected."
@@ -17,13 +18,13 @@ if [[ -d /var/home/"$1"/Desktop ]]; then
 fi
 
 echo "Creating image..."
-truncate -s $(df -h /var | tail -n 1 | awk '{print $2}') /var/usrlocal/transit/repo/"$1".homedir
+truncate -s $(df -h /var | tail -n 1 | awk '{print $2}') "$transit_dir"/repo/"$1".homedir
 
 echo "Associating image..."
-LOOPDEV=$(losetup -f --show /var/usrlocal/transit/repo/"$1".homedir)
+LOOPDEV=$(losetup -f --show "$transit_dir"/repo/"$1".homedir)
 
 if [[ -z "$LOOPDEV" ]]; then
-    echo "Error: No loop device found for /var/usrlocal/transit/repo/$1.homedir."
+    echo "Error: No loop device found for "$transit_dir"/repo/$1.homedir."
     exit 1
 fi
 
@@ -39,6 +40,11 @@ echo "Mounting and preparing image..."
 mount /dev/mapper/init_transit-"$(cat /etc/transit/transit-id)" /var/home
 mkhomedir_helper "$1"
 [[ "$set_readme" == "true" ]] && cp /etc/transit/.README.md /var/home/"$1"/README.md
+
+echo "Initializing backup repository..."
+mkdir -pm 700 "$transit_dir"/backup/"$1"-backup
+chown "$1":"$1" "$transit_dir"/backup/"$1"-backup
+/usr/libexec/transit/maintenance &
 
 echo "Unmounting image..."
 umount /var/home

@@ -1,0 +1,7 @@
+[Unit]
+Description=Run transit backup
+BindsTo=var.mount
+
+[Service]
+Type=oneshot
+ExecStart=/usr/libexec/transit/maintenance

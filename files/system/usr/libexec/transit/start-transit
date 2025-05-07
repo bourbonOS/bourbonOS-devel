@@ -8,18 +8,19 @@ if [[ -t 0 || -z "$(cat -)" ]]; then
 fi
 
 pass=$(cat)
+transit_dir="/var/usrlocal/transit"
 
 if [[ "$(id -u "$1")" -lt 1000 ]]; then
     exit 0
-elif [[ ! -f /var/usrlocal/transit/repo/"$1".homedir ]]; then
+elif [[ ! -f "$transit_dir"/repo/"$1".homedir ]]; then
     echo "$pass" | /usr/libexec/transit/setup-transit "$1"
 fi
 
 echo "Associating image..."
-LOOPDEV=$(losetup -f --show /var/usrlocal/transit/repo/"$1".homedir)
+LOOPDEV=$(losetup -f --show "$transit_dir"/repo/"$1".homedir)
 
 if [[ -z "$LOOPDEV" ]]; then
-    echo "Error: No loop device found for /var/usrlocal/transit/repo/$1.homedir."
+    echo "Error: No loop device found for "$transit_dir"/repo/$1.homedir."
     exit 1
 fi
 
@@ -29,7 +30,7 @@ echo "$pass" | cryptsetup luksOpen "$LOOPDEV" in_transit-$(cat /etc/transit/tran
 unset pass
 
 echo "Mounting image..."
-mount --bind -o ro /var/home /var/usrlocal/transit/varhome
+mount --bind -o ro /var/home "$transit_dir"/varhome
 mount /dev/mapper/in_transit-$(cat /etc/transit/transit-id) /var/home
 
 echo "Mounted image successfully."
