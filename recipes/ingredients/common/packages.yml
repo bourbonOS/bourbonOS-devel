@@ -9,7 +9,6 @@ install:
     - atuin
     - distrobox
     - chromium
-    - rsync
     - unzip
     - alsa-sof-firmware
     - iwlwifi-mvm-firmware
@@ -17,6 +16,7 @@ install:
     - iwlegacy-firmware
     - plymouth 
     - plymouth-theme-spinner
+    - rlwrap
     - pamtester
 remove:
   packages:

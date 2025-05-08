@@ -2,13 +2,12 @@
 Image=ghcr.io/bourbonos/subsystem:latest
 ContainerName=subsystem
 UserNS=keep-id
-HostUser=true
+User=173:173
 Volume=/etc/passwd:/etc/passwd:ro
 Volume=/etc/group:/etc/group:ro
 Volume=/etc/shadow:/etc/shadow:ro
-Volume=/home:/home:rslave
+Volume=/var/home:/home:rslave
 Volume=/var/lib/subsystem:/var/lib/subsystem:rw
-PodmanArgs=--userns=keep-id
 
 [Service]
 TimeoutStartSec=300
