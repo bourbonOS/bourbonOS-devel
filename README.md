@@ -1,8 +1,5 @@
-# bourbonOS-devel &nbsp; [![bluebuild build badge](https://github.com/cherry-os/bourbonOS-devel/actions/workflows/build.yml/badge.svg)](https://github.com/cherry-os/bourbonOS-devel/actions/workflows/build.yml)
-Hey there!
-bourbonOS isnt really anything new - except for its shell.
-Just like in vOS, the default shell will open a distrobox, seperating you from the host.
-More features are to come.
+# Warning
+This the development repository of bourbonOS, meaning a LOT of unstable builds are pushed out. Please keep in mind that if you plan on using these builds, BE READY for stuff to break, including your whole system. If you want something stable, please look [here.](https://github.com/bourbonOS/bourbonOS) (Note: Stable builds are slightly outdated as of current.)
 
 # Contributing
-This is the development repository of bourbonOS, providing development builds with new features and bug fixes that need to be tested before being pushed downstream. If you would like to help, please, rebase to these images. The syntax for rebasing is the same as described in the live repo, just append `-devel` to the image name. Thank you!
+Again, this is the development repository of bourbonOS, providing development builds with new features and bug fixes that need to be tested before being pushed downstream. If you would like to help, please, rebase to these images with the above warning in mind. The syntax for rebasing is the same as described in the live repo, just append `-devel` to the image name. Thank you!
