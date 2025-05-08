@@ -13,7 +13,12 @@ subcommands:
   update                        update repositories
   upgrade                       upgrade all packages
   help                          show this dialogue
+  version                       show program version
 EOF
+}
+
+throbber() {
+    /usr/libexec/ostools/throbber $@
 }
 
 install_package() {
@@ -22,9 +27,7 @@ install_package() {
         help
         exit 1
     fi
-    echo "Installing $1..."
-    nix-env -iA nixpkgs."$1"
-    echo "Installed $1!"
+    throbber --msg="Installing $1..." --cmd="nix-env -iA nixpkgs.$1"
 }
 
 remove_package() {
@@ -34,8 +37,7 @@ remove_package() {
         exit 1
     fi
     echo "Removing $1..."
-    nix-env -e "$1"
-    nix-collect-garbage
+    throbber --msg="Removing $1..." --cmd="nix-env -e "$1" && nix-collect-garbage"
     echo "Removed $1!"
 }
 
@@ -45,15 +47,11 @@ list_packages() {
 }
 
 update_repositories() {
-    echo "Updating Nix channels..."
-    nix-channel --update
-    nix-collect-garbage
+    throbber --msg="Updating Nix channels..." --cmd="nix-channel --update && nix-collect-garbage"
 }
 
 upgrade_packages() {
-    echo "Upgrading packages..."
-    nix-env --upgrade
-    nix-collect-garbage
+    throbber --msg="Upgrading packages..." --cmd="nix-env --upgrade && nix-collect-garbage"
 }
 
 if [[ "$EUID" -ne 0 ]]; then
@@ -77,6 +75,8 @@ case "${1:-}" in
     upgrade)
         upgrade_packages
         ;;
+    version)
+        echo "synergy version 1.3.1"
     help | "")
         help
         ;;

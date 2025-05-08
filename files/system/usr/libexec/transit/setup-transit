@@ -4,7 +4,9 @@ set -oue pipefail
 
 if [[ -t 0 || -z "$(cat -)" ]]; then
     echo "Error: No input received." >&2
-    exit 1
+    exit 0
+elif [[ "$(id -u "$1")" -lt 1000 || ! grep -q "^$1:" /etc/passwd ]]; then
+    exit 0
 fi
 
 echo "Starting setup."
@@ -22,11 +24,7 @@ truncate -s $(df -h /var | tail -n 1 | awk '{print $2}') "$transit_dir"/repo/"$1
 
 echo "Associating image..."
 LOOPDEV=$(losetup -f --show "$transit_dir"/repo/"$1".homedir)
-
-if [[ -z "$LOOPDEV" ]]; then
-    echo "Error: No loop device found for "$transit_dir"/repo/$1.homedir."
-    exit 1
-fi
+[[ -z "$LOOPDEV" ]] && echo "Error: No loop device found for "$transit_dir"/repo/$1.homedir." && exit 1
 
 echo "Encrypting image..."
 echo "$pass" | cryptsetup --type luks2 --cipher aes-xts-plain64 luksFormat /dev/loop0

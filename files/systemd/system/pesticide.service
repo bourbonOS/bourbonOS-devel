@@ -1,7 +1,7 @@
 [Unit]
 Description=Check integrity of configured directories
-After=local-fs.target
-BindsTo=local-fs.target
+After=local-fs-pre.target
+BindsTo=local-fs-pre.target
 
 [Service]
 Type=oneshot

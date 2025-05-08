@@ -7,7 +7,10 @@ readonly USER_CONTAINER_CONFIG_DIR="$CONTAINER_CONFIG_DIR/$USER"
 readonly CONTAINER_LIST_FILE="$CONTAINER_CONFIG_DIR/configs.d/.cherry/list.txt"
 readonly CONTAINER_OVERRIDE_CONFIG="$HOME/.config/containerconf.d/override.conf"
 readonly FILENAME_TMP=$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c 35 ; echo '')
-readonly PS3="> "
+readonly GREEN="\033[0;32m"
+readonly BLUE="\033[0;34m"
+readonly RESET="\033[0m"
+readonly PS3="[ > ] "
 
 help() {
     cat <<EOF 
@@ -79,11 +82,11 @@ EOF
 }
 
 version() {
-    echo "cherry v3.1.5"
+    echo "cherry version 3.1.5"
 }
 
-loadingbar() {
-    command -v /usr/libexec/ostools/loadingbar &>/dev/null && /usr/libexec/ostools/loadingbar "$@" || echo "Loading..."
+throbber() {
+    /usr/libexec/ostools/throbber $@
 }
 
 handle_baseos() {
@@ -103,8 +106,8 @@ handle_containeros() {
                 case "$container" in
                     "Choose from a list of images")
                         echo "Select an image from the list:"
-                        select image in $(cat "$CONTAINER_LIST_FILE"); do
-                            [[ -n $image ]] && loadingbar --msg="Creating your container, this may take a second." --cmd="distrobox-assemble create --file /etc/containerconf/$image.ini" && echo "Done! You can switch to the container using 'cherry branch jump'." && exit 0
+                        select image in hi hi hi; do
+                            [[ -n $image ]] && throbber --msg="Creating container..." --cmd="distrobox-assemble create --file /etc/containerconf/$image.ini" && echo "Done! You can switch to the container using 'cherry branch jump'." && exit 0
                         done
                         ;;
                     "Specify your own (advanced)")
@@ -114,7 +117,7 @@ handle_containeros() {
                         sed -i "s/<name>/$manual_container_name/g" "/tmp/$FILENAME_TMP.ini"
                         sed -i "s/<url>/$manual_container_url/g" "/tmp/$FILENAME_TMP.ini"
                         nano "/tmp/$FILENAME_TMP.ini"
-                        loadingbar --msg="Creating your container, this may take a second." --cmd="distrobox-assemble create --file /tmp/$FILENAME_TMP.ini"
+                        throbber --msg="Creating container.." --cmd="distrobox-assemble create --file /tmp/$FILENAME_TMP.ini"
                         rm "/tmp/$FILENAME_TMP.ini"
                         echo "Done! You can switch to the container using 'cherry branch jump'."
                         exit 0
@@ -127,7 +130,7 @@ handle_containeros() {
             [[ -z $containers ]] && echo "No containers to remove." && exit 1
             echo "Select a container by its number to remove it."
             select container in $containers; do
-                [[ -n $container ]] && loadingbar --msg="Removing your container, this may take a second." --cmd="distrobox-rm $container" && echo "Removed $container." && exit 0
+                [[ -n $container ]] && throbber --msg="Removing container..." --cmd="distrobox-rm $container" && echo "Removed $container." && exit 0
             done
             ;;
         save)
@@ -135,12 +138,12 @@ handle_containeros() {
             [[ -z $containers ]] && echo "No containers to save." && exit 1
             echo "Select a container by its number to save it to an image."
             select container in $containers; do
-                [[ -n $container ]] && loadingbar --msg="Saving your container as an image, this may take a second." --cmd="podman save $container $HOME/$container.tar" && echo "Container image saved at $HOME/$container.tar" && exit 0
+                [[ -n $container ]] && throbber --msg="Saving container..." --cmd="podman save $container $HOME/$container.tar" && echo "Container image saved at $HOME/$container.tar" && exit 0
             done
             ;;
         load)
             [[ ! -f "$2" ]] && echo "Error: Image path not found." && exit 1
-            loadingbar --msg="Loading your container image, this may take a second." --cmd="podman load $2"
+            throbber --msg="Loading container image..." --cmd="podman load $2"
             echo "Container loaded from $2. You can switch to it using 'cherry branch jump'."
             ;;
         switch)

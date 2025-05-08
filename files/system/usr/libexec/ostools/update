@@ -2,17 +2,41 @@
 
 set -euo pipefail
 
-loadingbar() {
-    /usr/libexec/ostools/loadingbar "$@"
-}
-
 if [[ "$EUID" -ne 0 ]]; then
     echo "Not authorized. Please run as root."
     exit 1
 fi
 
-if [[ "${1:-}" == "--no-interact" ]]; then
-    if [[ "${2:-}" == "--check-conditions" ]]; then
+throbber() {
+    /usr/libexec/ostools/throbber "$@"
+}
+
+no_interact=false
+check_conditions=false
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --no-interact)
+            no_interact=true
+            shift
+            ;;
+        --check-conditions)
+            check_conditions=true
+            shift
+            ;;
+        --interactive)
+            no_interact=false
+            shift
+            ;;
+        *)
+            echo "Invalid argument: $1"
+            exit 1
+            ;;
+    esac
+done
+
+if $no_interact; then
+    if $check_conditions; then
         cpu_usage=$(grep 'cpu ' /proc/stat | awk '{usage=($2+$4)*100/($2+$4+$5)} END {print usage}')
         battery_level=$(cat /sys/class/power_supply/BAT0/capacity)
         last_run_file="/etc/last_update_run"
@@ -45,19 +69,19 @@ if [[ "${1:-}" == "--no-interact" ]]; then
         echo "Done."
         exit 0
     fi
-elif [[ "${1:-}" == "--interactive" ]]; then
+elif ! $no_interact; then
     echo "Starting manual upgrade in 3 seconds."
     echo "Press CTRL+C to cancel."
     sleep 3
-    loadingbar --msg="Task: Update system" --cmd="bootc upgrade"
-    loadingbar --msg="Task: Update subsystem" --cmd="subsys pull --force"
-    loadingbar --msg="Task: Update system flatpaks" --cmd="flatpak upgrade --system"
+    throbber --msg="Task: Update system" --cmd="bootc upgrade"
+    throbber --msg="Task: Update subsystem" --cmd="subsys pull --force"
+    throbber --msg="Task: Update system flatpaks" --cmd="flatpak upgrade --system"
     for USER in /var/home/*; do
-        loadingbar --msg="Task: Update user flatpaks for $USER" --cmd="su - \"$USER\" -c \"flatpak upgrade --user\""
+        throbber --msg="Task: Update user flatpaks for $USER" --cmd="su - \"$USER\" -c \"flatpak upgrade --user\""
     done
-    loadingbar --msg="Task: Fetch Nix channels" --cmd="nix-channel --update"
-    loadingbar --msg="Task: Update Nix packages" --cmd="nix-env --upgrade"
-    loadingbar --msg="Task: Clean up" --cmd="nix-collect-garbage"
+    throbber --msg="Task: Fetch Nix channels" --cmd="nix-channel --update"
+    throbber --msg="Task: Update Nix packages" --cmd="nix-env --upgrade"
+    throbber --msg="Task: Clean up" --cmd="nix-collect-garbage"
     notify-send "System Update" "Task finished."
     echo "Update finished."
 else

@@ -4,25 +4,19 @@ set -oue pipefail
 
 if [[ -t 0 || -z "$(cat -)" ]]; then
     echo "Error: No input received." >&2
-    exit 1
-fi
-
-pass=$(cat)
-transit_dir="/var/usrlocal/transit"
-
-if [[ "$(id -u "$1")" -lt 1000 ]]; then
+    exit 0
+elif [[ "$(id -u "$1")" -lt 1000 || ! grep -q "^$1:" /etc/passwd ]]; then
     exit 0
 elif [[ ! -f "$transit_dir"/repo/"$1".homedir ]]; then
     echo "$pass" | /usr/libexec/transit/setup-transit "$1"
 fi
 
+pass=$(cat)
+transit_dir="/var/usrlocal/transit"
+
 echo "Associating image..."
 LOOPDEV=$(losetup -f --show "$transit_dir"/repo/"$1".homedir)
-
-if [[ -z "$LOOPDEV" ]]; then
-    echo "Error: No loop device found for "$transit_dir"/repo/$1.homedir."
-    exit 1
-fi
+[[ -z "$LOOPDEV" ]] && echo "Error: No loop device found for "$transit_dir"/repo/$1.homedir." && exit 1
 
 echo "Decrypting image..."
 echo "$pass" | cryptsetup luksOpen "$LOOPDEV" in_transit-$(cat /etc/transit/transit-id)

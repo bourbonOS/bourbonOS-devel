@@ -1,0 +1,71 @@
+#!/bin/bash
+
+SPINNER=('-' '\\' '|' '/')
+BLUE="\033[34m"
+YELLOW="\033[33m"
+GREEN="\033[32m"
+RED="\033[31m"
+RESET="\033[0m"
+
+spin() {
+    local message="$1"
+    local color="$2"
+    while :; do
+        for i in "${SPINNER[@]}"; do
+            echo -ne "\r${BLUE}[${RESET} ${color}${i}${RESET} ${BLUE}]${RESET} $message"
+            sleep 0.12
+        done
+    done
+}
+
+for arg in "$@"; do
+    case $arg in
+        --cmd=*)
+            CMD="${arg#*=}"
+            shift
+            ;;
+        --msg=*)
+            MSG="${arg#*=}"
+            shift
+            ;;
+        *)
+            echo "Usage: $0 --cmd=\"<command>\" --msg=\"<message>\""
+            exit 1
+            ;;
+    esac
+done
+
+if [ -z "$CMD" ] || [ -z "$MSG" ]; then
+    echo "Usage: $0 --cmd=\"<command>\" --msg=\"<message>\""
+    exit 1
+fi
+
+spin "$MSG" "$YELLOW" &
+SPIN_PID=$!
+
+ERROR_FILE=$(mktemp)
+
+bash -c "$CMD" 2>"$ERROR_FILE" &
+CMD_PID=$!
+
+wait "$CMD_PID"
+CMD_EXIT_CODE=$?
+
+kill "$SPIN_PID" > /dev/null 2>&1
+wait "$SPIN_PID" 2>/dev/null
+
+if [ $CMD_EXIT_CODE -eq 0 ]; then
+    echo -ne "\r${BLUE}[${RESET} ${GREEN}Done${RESET} ${BLUE}]${RESET} $MSG\n"
+else
+    ERROR_MSG=$(cat "$ERROR_FILE")
+    if [ -z "$ERROR_MSG" ]; then
+        ERROR_MSG="Error: command failed"
+    else
+        ERROR_MSG="Error: ${ERROR_MSG}"
+    fi
+    echo -ne "\r${BLUE}[${RESET} ${RED}Failed${RESET} ${BLUE}]${RESET} $ERROR_MSG\n"
+fi
+
+rm -f "$ERROR_FILE"
+
+exit $CMD_EXIT_CODE

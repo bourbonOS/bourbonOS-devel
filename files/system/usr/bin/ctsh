@@ -1,0 +1,85 @@
+#!/bin/bash
+
+export CONTAINER="subsystem"
+
+HISTFILE=~/.ctsh_history
+HISTSIZE=1000
+HISTFILESIZE=2000
+touch "$HISTFILE"
+
+WRAPPER_SCRIPT="/usr/libexec/ctsh/wrapper"
+PROMPT_SCRIPT="/usr/libexec/ctsh/prompt"
+FUNCTIONS_FILE="/usr/libexec/ctsh/path"
+HOST="false"
+
+for arg in "$@"; do
+  if [[ "$arg" == "--host" ]]; then
+    HOST="true"
+    break
+  fi
+done
+
+container_exec() {
+    if [[ "$CONTAINER" == "subsystem" ]]; then
+        podman exec -it \
+        --user "$USER_ID" \
+        --workdir "$USER_HOME" \
+        -e HOME="$USER_HOME" \
+        -e USER="$USER" \
+        "$1" "$2"
+    else
+        distrobox-enter --name "$CONTAINER" -- "$1"
+    fi
+}
+
+process_command() {
+    local command="$1"
+    local basecmd=$(echo "$command" | awk '{print $1}')
+
+    if [[ -z "$command" ]]; then
+        return 0
+    fi
+
+    if [[ "$command" == "exit" ]]; then
+        echo "Goodbye!"
+        return 1
+    fi
+
+    if [[ -n "$basecmd" ]]; then
+        if [[ "$basecmd" == "container" ]]; then
+            cherry containeros "${command#* }"
+        elif [[ "$basecmd" == "baseos" ]]; then
+            cherry baseos "${command#* }"
+        elif [[ "$basecmd" == "transit" ]]; then
+            cherry transit "${command#* }"
+        elif $HOST; then
+            if command -v "${basecmd}" &> /dev/null; then
+                eval "${command}"
+            else
+                echo "Command not found: ${basecmd}"
+            fi
+        elif ! $HOST; then
+            if container_exec "${CONTAINER}" "command -v '${basecmd}'" &> /dev/null; then
+                container_exec "${CONTAINER}" "eval '${command}'"
+            else
+                echo "Command not found: ${basecmd}"
+            fi
+        fi
+    fi
+    
+    return 0
+}
+
+while true; do
+    PROMPT=$("$PROMPT_SCRIPT")
+    command=$(rlwrap -S "$PROMPT" -H "$HISTFILE" "$WRAPPER_SCRIPT")
+    
+    process_command "$command"
+    if [[ $? -ne 0 ]]; then
+        break
+    fi
+    
+    if [[ -n "$command" && "$command" != "$(tail -n 1 "$HISTFILE" 2>/dev/null)" ]]; then
+        echo "$command" >> "$HISTFILE"
+    fi
+done

@@ -2,10 +2,9 @@
 Description=Update your system
 
 [Timer]
-OnBootSec=0
-OnBootSec=2h
-Persistent=false
 Unit=sysupdate.service
+OnCalendar=*-*-* 12:00:00
+Persistent=true
 
 [Install]
 WantedBy=timers.target
