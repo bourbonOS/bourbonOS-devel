@@ -24,4 +24,5 @@ dnf -y remove make gcc pam-devel
 
 # Setup subsystem user
 
+groupadd -r -g 173 bourbon-subsys
 useradd -r -u 173 -g 173 -s /sbin/nologin -m -c "User for subsystem" bourbon-subsys
