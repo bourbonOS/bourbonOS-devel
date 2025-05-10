@@ -42,29 +42,31 @@ process_command() {
     fi
 
     if [[ -n "$basecmd" ]]; then
-        if [[ "$basecmd" == "container" ]]; then
-            container "${command#* }"
-        elif [[ "$basecmd" == "baseos" ]]; then
-            baseos "${command#* }"
-        elif [[ "$basecmd" == "transit" ]]; then
-            transit "${command#* }"
-        elif [[ "$basecmd" == "synergy" ]]; then
-            synergy "${command#* }"
-        elif $HOST; then
-            if command -v "${basecmd}" &> /dev/null; then
+        case "$basecmd" in
+            container|baseos|transit|synergy)
                 ${command}
-            else
-                echo "Command not found: ${basecmd}"
-            fi
-        elif ! $HOST; then
-            if container_exec "${CONTAINER}" "command -v '${basecmd}'" &> /dev/null; then
-                container_exec "${CONTAINER}" "${command}"
-            else
-                echo "Command not found: ${basecmd}"
-            fi
-        fi
+                ;;
+            bash|sh|subsys|dnf|dnf5)
+                echo "Operation not permitted."
+                ;;
+            *)
+                if [[ "$HOST" == "true" ]]; then
+                    if command -v "${basecmd}" &> /dev/null; then
+                        ${command}
+                    else
+                        echo "Command not found: ${basecmd}"
+                    fi
+                elif [[ "$HOST" == "false" ]]; then
+                    if container_exec "${CONTAINER}" "command -v '${basecmd}'" &> /dev/null; then
+                        container_exec "${CONTAINER}" "${command}"
+                    else
+                        echo "Command not found: ${basecmd}"
+                    fi
+                fi
+                ;;
+        esac
     fi
-    
+
     return 0
 }
 
