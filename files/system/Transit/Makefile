@@ -2,11 +2,21 @@ CC=gcc
 CFLAGS=-fPIC -Wall -Werror -O2
 LDFLAGS=-shared
 LIBS=-lpam
+TARGET=pam_transit.so
+DESTDIR=/lib64/security
 
-all: pam_transit.so
+.PHONY: all clean install uninstall
 
-pam_transit.so: pam_transit.c
+all: $(TARGET)
+
+$(TARGET): pam_transit.c
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $< $(LIBS)
 
-install: pam_transit.so
-	install -Dm755 pam_transit.so /lib64/security/
+clean:
+	rm -f $(TARGET)
+
+install: $(TARGET)
+	install -Dm755 $(TARGET) $(DESTDIR)/$(TARGET)
+
+uninstall:
+	rm -f $(DESTDIR)/$(TARGET)
