@@ -37,10 +37,10 @@ truncate_path() {
 
 WORK_DIR=$(truncate_path "$FULL_PATH")
 
-if "$HOST"; then
+if [[ "$HOST" == "true" ]]; then
     printf "[${USER_NAME}@${CONTAINER}]-[${WORK_DIR}]$ "
-elif ! "$HOST"; then
+elif [[ "$HOST" == "false" ]]; then
     printf "${GREEN}[${BLUE}${USER_NAME}@${HOST_NAME}${GREEN}]-[${BLUE}${WORK_DIR}${GREEN}]${RESET}$ "
 else
-    printf "$> "
+    printf "[ ctsh ]$ "
 fi
