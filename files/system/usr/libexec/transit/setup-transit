@@ -5,7 +5,7 @@ set -oue pipefail
 if [[ -t 0 || -z "$(cat -)" ]]; then
     echo "Error: No input received." >&2
     exit 0
-elif [[ "$(id -u "$1")" -lt 1000 || ! grep -q "^$1:" /etc/passwd ]]; then
+elif [[ "$(id -u "$1" 2>/dev/null)" -lt 1000 ]] || ! grep -q "^$1:" /etc/passwd; then
     exit 0
 fi
 
