@@ -24,14 +24,14 @@ wait_for_directory() {
     return 0
 }
 
-if wait_for_directory "$HOME"; then
+if wait_for_directory "$HOME/.bkconf/bk.conf"; then
     source "$HOME"/.bkconf/bk.conf
-    if [[ ! -d /var/usrlocal/transit/backup/"$USER"-backup ]]; then
+    if [[ ! -d /var/home/backups ]]; then
         openssl rand -base64 256 > "$HOME"/.bkconf/pass.key
-        restic init --repo /var/usrlocal/transit/backup/"$USER"-backup --password-file "$HOME"/.bkconf/pass.key
-        restic backup --repo /var/usrlocal/transit/backup/"$USER"-backup "$exclude" "$HOME" --password-file "$HOME"/.bkconf/pass.key
-    elif [[ -d /var/usrlocal/transit/backup/"$USER"-backup ]]; then
-        restic backup --repo /var/usrlocal/transit/backup/"$USER"-backup "$exclude" "$HOME" --password-file "$HOME"/.bkconf/pass.key
+        restic init --repo /var/home/backups --password-file "$HOME"/.bkconf/pass.key
+        restic backup --repo /var/home/backups "$HOME" --password-file "$HOME"/.bkconf/pass.key $exclude
+    elif [[ -d /var/home/backups ]]; then
+        restic backup --repo /var/home/backups "$HOME" --password-file "$HOME"/.bkconf/pass.key $exclude
     fi
 else
     exit 1

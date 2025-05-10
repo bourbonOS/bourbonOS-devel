@@ -1,58 +1,11 @@
 #!/bin/bash
 
-set -oe pipefail
+if [ "${0}" = "${BASH_SOURCE[0]}" ]; then
+    echo "Internal error."
+    exit
+fi
 
-readonly CONTAINER_CONFIG_DIR="/etc/containerconf"
-readonly USER_CONTAINER_CONFIG_DIR="$CONTAINER_CONFIG_DIR/$USER"
-readonly CONTAINER_LIST_FILE="$CONTAINER_CONFIG_DIR/configs.d/.cherry/list.txt"
-readonly CONTAINER_OVERRIDE_CONFIG="$HOME/.config/containerconf.d/override.conf"
-readonly FILENAME_TMP=$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c 35 ; echo '')
-readonly GREEN="\033[0;32m"
-readonly BLUE="\033[0;34m"
-readonly RESET="\033[0m"
-readonly PS3="[ > ] "
-
-help() {
-    cat <<EOF 
-Usage: cherry <subcommand> [option]
-
-Subcommands:
-  baseos                        baseOS commands
-  containeros                   containerOS commands
-  fsguard                       FSguard commands
-  version                       show program version
-  help                          show this dialogue
-EOF
-}
-
-
-
-status() {
-    local TRANSIT_STATUS="NOT_MOUNTED"
-    [[ -f /etc/transit/transit-status ]] && TRANSIT_STATUS=$(cat /etc/transit/transit-status)
-    cat <<EOF
-bourbonOS $(cat /etc/bourbonOS_version)
-Pesticide: $(/usr/libexec/pesticide/status) | $(/usr/libexec/pesticide/version)
-Transit: $TRANSIT_STATUS | $(cat /etc/transit_version)
-=======================
-host: $(hostname)
-kargs: $(cat /proc/cmdline | sed -E 's/(ostree=)[^ ]+/\1.../' | sed -E 's/(BOOT_IMAGE=)[^ ]+/\1.../' | sed -E 's/(uuid=)[^ ]+/\1.../' | sed -E 's/(luks_uuid=)[^ ]+/\1.../')
-kernver: $(uname -r)
-=======================
-ostree status:
-$(ostree admin status)
-EOF
-}
-
-version() {
-    echo "cherry version 3.1.5"
-}
-
-throbber() {
-    /usr/libexec/ostools/throbber $@
-}
-
-handle_baseos() {
+baseos() {
     case "$1" in
         exec) shift; "$@" ;;
         upgrade) clear; echo "Please authorize to start your system upgrade."; pkexec /usr/libexec/ostools/update --interactive ;;
@@ -61,7 +14,7 @@ handle_baseos() {
     esac
 }
 
-handle_containeros() {
+container() {
     case "$1" in
         new)
             echo "Do you want to:"
@@ -114,7 +67,7 @@ handle_containeros() {
             [[ -z $containers ]] && echo "No containers to switch to." && exit 1
             echo "Select a container by its number to switch to it."
             select container in $containers; do
-                [[ -n $container ]] && exec distrobox-enter "$container"
+                [[ -n $container ]] && export CONTAINER="$container"
             done
             ;;
         list) distrobox-list | awk '{print $3}' | grep -v -e '^NAME$' -e '^cherry-cli$' ;;
@@ -122,19 +75,42 @@ handle_containeros() {
     esac
 }
 
-handle_fsguard() {
+transit() {
+    rflags="-r /var/home/backups --password-file $HOME/.bkconf/pass.key"
     case "$1" in
-        status) /usr/libexec/pesticide/status ;;
-        check) /usr/libexec/pesticide/check ;;
-        apply) shift; /usr/libexec/pesticide/enroll "$@" ;;
-        help | *) pesticide-help ;;
+        status) cat /etc/transit/transit-status ;;
+        bkup) restic $rflags backup "$HOME" $exclude;;
+        bkls)
+            if [[ -z $2 ]]; then
+                echo "No snapshot specified."
+                echo "Search for a snapshot to use with 'transit bklist'."
+            else
+                restic $rflags ls "$2"
+            fi
+            ;;
+        bkconf)
+            nano "$HOME"/.bkconf/bk.conf
+            echo "Changes applied."
+            ;;
+        bkdiff)
+            if [[ -z $2 || -z $3 ]]; then
+                echo "Insufficient arguments provided."
+                echo "Search for snapshots to diff with 'transit bklist'."
+            else
+                restic $rflags diff "$2" "$3"
+            fi
+            ;;
+        bkstat) restic $rflags stats --human-readable;;
+        bklist) restic $rflags snapshots ;;
+        bkrestore)
+            if [[ -z $2 ]]; then
+                echo "No snapshot specified."
+                echo "Search for a snapshot to restore with 'transit bklist'."
+            else
+                restic $rflags restore $2 --target "$HOME"
+            fi
+            ;;
+        bkcheck) restic $rflags check;;
     esac
+    unset rflags
 }
-
-case "$1" in
-    baseos) shift; handle_baseos "$@" ;;
-    containeros) shift; handle_containeros "$@" ;;
-    fsguard) shift; handle_fsguard "$@" ;;
-    version) version ;;
-    help | *) help ;;
-esac

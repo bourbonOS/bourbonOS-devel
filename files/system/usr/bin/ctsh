@@ -47,11 +47,11 @@ process_command() {
 
     if [[ -n "$basecmd" ]]; then
         if [[ "$basecmd" == "container" ]]; then
-            cherry containeros "${command#* }"
+            containeros "${command#* }"
         elif [[ "$basecmd" == "baseos" ]]; then
-            cherry baseos "${command#* }"
+            baseos "${command#* }"
         elif [[ "$basecmd" == "transit" ]]; then
-            cherry transit "${command#* }"
+            transit "${command#* }"
         elif $HOST; then
             if command -v "${basecmd}" &> /dev/null; then
                 eval "${command}"
