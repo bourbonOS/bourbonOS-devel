@@ -7,9 +7,6 @@ readonly USER_CONTAINER_CONFIG_DIR="$CONTAINER_CONFIG_DIR/$USER"
 readonly CONTAINER_LIST_FILE="$CONTAINER_CONFIG_DIR/configs.d/.cherry/list.txt"
 readonly CONTAINER_OVERRIDE_CONFIG="$HOME/.config/containerconf.d/override.conf"
 readonly FILENAME_TMP=$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c 35 ; echo '')
-readonly GREEN="\033[0;32m"
-readonly BLUE="\033[0;34m"
-readonly RESET="\033[0m"
 readonly PS3="[ > ] "
 
 help() {

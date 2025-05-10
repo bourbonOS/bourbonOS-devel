@@ -5,6 +5,31 @@ if [ "${0}" = "${BASH_SOURCE[0]}" ]; then
     exit
 fi
 
+status() {
+    local TRANSIT_STATUS="NOT_MOUNTED"
+    [[ -f /etc/transit/transit-status ]] && TRANSIT_STATUS=$(cat /etc/transit/transit-status)
+    cat <<EOF
+bourbonOS $(cat /etc/bourbonOS_version)
+Pesticide: $(/usr/libexec/pesticide/status) | $(/usr/libexec/pesticide/version)
+Transit: $TRANSIT_STATUS | $(cat /etc/transit_version)
+=======================
+host: $(hostname)
+kargs: $(cat /proc/cmdline | sed -E 's/(ostree=)[^ ]+/\1.../' | sed -E 's/(BOOT_IMAGE=)[^ ]+/\1.../' | sed -E 's/(uuid=)[^ ]+/\1.../' | sed -E 's/(luks_uuid=)[^ ]+/\1.../')
+kernver: $(uname -r)
+=======================
+ostree status:
+$(ostree admin status)
+EOF
+}
+
+version() {
+    echo "cherry version 3.1.5"
+}
+
+throbber() {
+    /usr/libexec/ostools/throbber $@
+}
+
 baseos() {
     case "$1" in
         exec) shift; "$@" ;;
@@ -22,7 +47,7 @@ container() {
                 case "$container" in
                     "Choose from a list of images")
                         echo "Select an image from the list:"
-                        select image in hi hi hi; do
+                        select image $(cat $CONTAINER_LIST_FILE); do
                             [[ -n $image ]] && throbber --msg="Creating container..." --cmd="distrobox-assemble create --file /etc/containerconf/$image.ini" && echo "Done! You can switch to the container using 'cherry branch jump'." && exit 0
                         done
                         ;;
@@ -69,6 +94,7 @@ container() {
             select container in $containers; do
                 [[ -n $container ]] && export CONTAINER="$container"
             done
+            echo "Switched to container "$CONTAINER"."
             ;;
         list) distrobox-list | awk '{print $3}' | grep -v -e '^NAME$' -e '^cherry-cli$' ;;
         help | *) branch-help ;;
@@ -76,7 +102,7 @@ container() {
 }
 
 transit() {
-    rflags="-r /var/home/backups --password-file $HOME/.bkconf/pass.key"
+    local rflags="-r /var/home/backups --password-file $HOME/.bkconf/pass.key"
     case "$1" in
         status) cat /etc/transit/transit-status ;;
         bkup) restic $rflags backup "$HOME" $exclude;;
@@ -112,5 +138,4 @@ transit() {
             ;;
         bkcheck) restic $rflags check;;
     esac
-    unset rflags
 }
