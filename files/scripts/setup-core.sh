@@ -14,7 +14,7 @@ chmod 700 /etc/transit/transit-id
 
 # Compile stuff
 
-dnf -y install make rust gcc pam-devel
+dnf -y install make cargo rust gcc pam-devel
 
 cd /Transit
 make
@@ -26,7 +26,7 @@ install -Dm755 ./target/release/ctsh /usr/bin
 rm -rf /ctsh
 cd /
 
-dnf -y remove make rust gcc pam-devel
+dnf -y remove make cargo rust gcc pam-devel
 
 # Setup subsystem user
 
