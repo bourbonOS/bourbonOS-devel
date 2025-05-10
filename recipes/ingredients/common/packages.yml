@@ -16,7 +16,6 @@ install:
     - iwlegacy-firmware
     - plymouth 
     - plymouth-theme-spinner
-    - rlwrap
     - pamtester
 remove:
   packages:
