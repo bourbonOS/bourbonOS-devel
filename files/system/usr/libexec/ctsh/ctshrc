@@ -1,0 +1,9 @@
+export CONTAINER="subsystem"
+readonly CONTAINER_CONFIG_DIR="/etc/containerconf"
+readonly USER_CONTAINER_CONFIG_DIR="$CONTAINER_CONFIG_DIR/$USER"
+readonly CONTAINER_LIST_FILE="$CONTAINER_CONFIG_DIR/.cherry/list.txt"
+readonly CONTAINER_OVERRIDE_CONFIG="$HOME/.config/containerconf.d/override.conf"
+readonly FILENAME_TMP=$(mktemp)
+readonly PS3="[ > ] "
+readonly PROMPT_SCRIPT="/usr/libexec/ctsh/prompt"
+readonly FUNCTIONS_FILE="/usr/libexec/ctsh/path"

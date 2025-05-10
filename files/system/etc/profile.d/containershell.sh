@@ -23,8 +23,8 @@ if [[ -d /var/home/$USER ]]; then
     if [[ "$TERM" == "xterm-256color" ]]; then
         cshell
     elif [[ "$TERM" == "linux" ]]; then
-        printf "Would you like to enter debug mode? (access to host shell)\n\n"
-        read -p "y/n: " debug_ask
+        printf "Would you like to enter host-shell mode?\n\n"
+        read -p "[ y/n ]: " debug_ask
         if [[ "$debug_ask" == "y" ]]; then
             exec /usr/bin/ctsh --host
         else

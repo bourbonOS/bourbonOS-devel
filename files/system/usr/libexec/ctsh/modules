@@ -32,7 +32,7 @@ throbber() {
 
 baseos() {
     case "$1" in
-        exec) shift; "$@" ;;
+        exec) shift; $@ ;;
         upgrade) clear; echo "Please authorize to start your system upgrade."; pkexec /usr/libexec/ostools/update --interactive ;;
         status) status ;;
         help | *) stem-help ;;

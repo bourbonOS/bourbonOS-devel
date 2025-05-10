@@ -1,37 +1,26 @@
 #!/bin/bash
 
-export CONTAINER="subsystem"
-
-readonly CONTAINER_CONFIG_DIR="/etc/containerconf"
-readonly USER_CONTAINER_CONFIG_DIR="$CONTAINER_CONFIG_DIR/$USER"
-readonly CONTAINER_LIST_FILE="$CONTAINER_CONFIG_DIR/.cherry/list.txt"
-readonly CONTAINER_OVERRIDE_CONFIG="$HOME/.config/containerconf.d/override.conf"
-readonly FILENAME_TMP=$(mktemp)
-readonly PS3="[ > ] "
-
-HISTFILE=~/.ctsh_history
-HISTSIZE=1000
-HISTFILESIZE=2000
-touch "$HISTFILE"
-
-WRAPPER_SCRIPT="/usr/libexec/ctsh/wrapper"
-PROMPT_SCRIPT="/usr/libexec/ctsh/prompt"
-FUNCTIONS_FILE="/usr/libexec/ctsh/path"
-HOST="false"
-
 for arg in "$@"; do
-  if [[ "$arg" == "--host" ]]; then
-    HOST="true"
-    break
-  fi
+    if [[ "$arg" == "--host" ]]; then
+        readonly HOST="true"
+        break
+    elif [[ "$arg" != "--host" ]]; then
+        readonly HOST="false"
+        break
+    fi
 done
+
+source "$HOME"/.ctshrc
+source /usr/libexec/ctsh/ctshrc
+source /usr/libexec/ctsh/modules
+source /usr/libexec/ctsh/help-modules
 
 container_exec() {
     if [[ "$CONTAINER" == "subsystem" ]]; then
         podman exec -it \
-        --user "$USER_ID" \
-        --workdir "$USER_HOME" \
-        -e HOME="$USER_HOME" \
+        --user "$(id -u)" \
+        --workdir "$HOME" \
+        -e HOME="$HOME" \
         -e USER="$USER" \
         "$1" "$2"
     else
@@ -54,20 +43,22 @@ process_command() {
 
     if [[ -n "$basecmd" ]]; then
         if [[ "$basecmd" == "container" ]]; then
-            containeros "${command#* }"
+            container "${command#* }"
         elif [[ "$basecmd" == "baseos" ]]; then
             baseos "${command#* }"
         elif [[ "$basecmd" == "transit" ]]; then
             transit "${command#* }"
+        elif [[ "$basecmd" == "synergy" ]]; then
+            synergy "${command#* }"
         elif $HOST; then
             if command -v "${basecmd}" &> /dev/null; then
-                eval "${command}"
+                ${command}
             else
                 echo "Command not found: ${basecmd}"
             fi
         elif ! $HOST; then
             if container_exec "${CONTAINER}" "command -v '${basecmd}'" &> /dev/null; then
-                container_exec "${CONTAINER}" "eval '${command}'"
+                container_exec "${CONTAINER}" "${command}"
             else
                 echo "Command not found: ${basecmd}"
             fi

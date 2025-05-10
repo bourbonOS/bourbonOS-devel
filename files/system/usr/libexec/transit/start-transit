@@ -1,6 +1,7 @@
 #!/bin/bash
 
 set -oue pipefail
+shopt -s dotglob
 
 if [[ -t 0 || -z "$(cat -)" ]]; then
     echo "Error: No input received." >&2
@@ -22,6 +23,15 @@ echo "Decrypting image..."
 echo "$pass" | cryptsetup luksOpen "$LOOPDEV" in_transit-$(cat /etc/transit/transit-id)
 
 unset pass
+
+if [[ -f /tmp/.transit-fix/"$1" ]]; then
+    echo "Fixing "$1"'s home directory..."
+    rm -f /var/home/.transit-fix/"$1"
+    mount /dev/mapper/in_transit-$(cat /etc/transit/transit-id) "$transit_dir"/varhome
+    mv /var/home/"$1"/* "$transit_dir"/varhome/"$1"
+    umount "$transit_dir"/varhome
+    echo "Fixed."
+fi
 
 echo "Mounting image..."
 mount --bind -o ro /var/home "$transit_dir"/varhome
