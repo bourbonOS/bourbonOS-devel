@@ -22,15 +22,15 @@ static int execute_command(pam_handle_t *pamh, const char *command,
     int pipe_fd[2];
     
     /* Create pipe for password transfer */
-    if (pipe(pipe_fd) != 0) {
-        pam_syslog(pamh, LOG_ERR, "Failed to create pipe: %m");
+    if (pipe(pipe_fd) == -1) {
+        pam_syslog(pamh, LOG_ERR, "Failed to create pipe: %s", strerror(errno));
         return PAM_SYSTEM_ERR;
     }
     
     /* Fork process */
     child_pid = fork();
     if (child_pid == -1) {
-        pam_syslog(pamh, LOG_ERR, "Fork failed: %m");
+        pam_syslog(pamh, LOG_ERR, "Fork failed: %s", strerror(errno));
         close(pipe_fd[0]);
         close(pipe_fd[1]);
         return PAM_SYSTEM_ERR;
@@ -44,7 +44,8 @@ static int execute_command(pam_handle_t *pamh, const char *command,
         
         /* Redirect stdin to read from pipe */
         if (dup2(pipe_fd[0], STDIN_FILENO) == -1) {
-            pam_syslog(pamh, LOG_ERR, "Failed to redirect stdin: %m");
+            pam_syslog(pamh, LOG_ERR, "Failed to redirect stdin: %s", strerror(errno));
+            close(pipe_fd[0]);
             _exit(EXIT_FAILURE);
         }
         close(pipe_fd[0]);
@@ -53,7 +54,7 @@ static int execute_command(pam_handle_t *pamh, const char *command,
         execl(command, command, username, NULL);
         
         /* If we get here, exec failed */
-        pam_syslog(pamh, LOG_ERR, "Failed to execute %s: %m", command);
+        pam_syslog(pamh, LOG_ERR, "Failed to execute %s: %s", command, strerror(errno));
         _exit(EXIT_FAILURE);
     }
     
@@ -62,15 +63,24 @@ static int execute_command(pam_handle_t *pamh, const char *command,
     /* Close read end of pipe */
     close(pipe_fd[0]);
     
-    /* Write password to pipe */
+    /* Write password to pipe if available */
     if (password != NULL) {
         size_t password_len = strlen(password);
-        ssize_t written = write(pipe_fd[1], password, password_len);
+        size_t total_written = 0;
         
-        if (written < 0 || (size_t)written != password_len) {
-            pam_syslog(pamh, LOG_ERR, "Failed to write password to pipe: %m");
-            close(pipe_fd[1]);
-            return PAM_SYSTEM_ERR;
+        while (total_written < password_len) {
+            ssize_t written = write(pipe_fd[1], 
+                                  password + total_written,
+                                  password_len - total_written);
+            
+            if (written == -1) {
+                if (errno == EINTR)
+                    continue;
+                pam_syslog(pamh, LOG_ERR, "Failed to write password: %s", strerror(errno));
+                close(pipe_fd[1]);
+                return PAM_SYSTEM_ERR;
+            }
+            total_written += written;
         }
     }
     
@@ -78,12 +88,19 @@ static int execute_command(pam_handle_t *pamh, const char *command,
     close(pipe_fd[1]);
     
     /* Wait for child to exit */
-    if (waitpid(child_pid, &status, 0) == -1) {
-        pam_syslog(pamh, LOG_ERR, "Wait for child failed: %m");
-        return PAM_SYSTEM_ERR;
+    while ((waitpid(child_pid, &status, 0)) == -1) {
+        if (errno != EINTR) {
+            pam_syslog(pamh, LOG_ERR, "Wait failed: %s", strerror(errno));
+            return PAM_SYSTEM_ERR;
+        }
     }
     
     /* Check exit status */
+    if (WIFSIGNALED(status)) {
+        pam_syslog(pamh, LOG_ERR, "Command terminated by signal %d", WTERMSIG(status));
+        return PAM_SYSTEM_ERR;
+    }
+    
     if (!WIFEXITED(status)) {
         pam_syslog(pamh, LOG_ERR, "Command terminated abnormally");
         return PAM_SYSTEM_ERR;
@@ -91,7 +108,7 @@ static int execute_command(pam_handle_t *pamh, const char *command,
     
     if (WEXITSTATUS(status) != 0) {
         pam_syslog(pamh, LOG_ERR, "Command failed with status %d", WEXITSTATUS(status));
-        return PAM_SYSTEM_ERR;
+        return PAM_AUTH_ERR;  // Changed from PAM_SYSTEM_ERR
     }
     
     return PAM_SUCCESS;
