@@ -4,41 +4,52 @@ use rustyline::{Editor, Result};
 
 mod container;
 mod prompt;
-mod command;
+mod session;
 mod utils;
-mod variables;
 
 use container::ContainerManager;
-use command::CommandProcessor;
+use session::ShellSession;
 
 fn main() -> Result<()> {
     let args: Vec<String> = env::args().collect();
     let host_mode = args.contains(&String::from("--host"));
 
     let container_manager = ContainerManager::new();
-    let command_processor = CommandProcessor::new(  // Removed mut
+    let mut session = ShellSession::new(
         host_mode,
-        container_manager.unique_id().to_string()
+        if host_mode { None } else { Some(container_manager.unique_id()) }
     );
 
     let mut rl = Editor::<()>::new()?;
     utils::load_history(&mut rl)?;
 
     loop {
-        let prompt = prompt::generate();
+        let prompt = prompt::generate(&session);
         let readline = rl.readline(&prompt);
 
         match readline {
             Ok(line) => {
-                if !line.trim().is_empty() {
-                    if !rl.add_history_entry(line.as_str()) {
-                        eprintln!("Failed to add history entry");
+                let line = line.trim();
+                if line.is_empty() {
+                    continue;
+                }
+
+                if line == "exit" {
+                    println!("Goodbye!");
+                    break;
+                }
+
+                // Handle history without using ? on bool
+                if line != "clear" {
+                    if rl.history().last().map(|s| s.as_str()) != Some(line) {
+                        if !rl.add_history_entry(line) {
+                            eprintln!("Failed to add history entry");
+                        }
                     }
                 }
 
-                if !command_processor.process(&line) {
-                    break;
-                }
+                let output = session.execute(line);
+                print!("{}", output);
             }
             Err(ReadlineError::Interrupted) => {
                 println!("^C");
