@@ -1,5 +1,5 @@
 ---
-name: stem-lambert-lts-devel
+name: stem-lambert-devel
 description: BourbonOS hinging on a bash script. GNOME-LTS edition.
 base-image: quay.io/centos-bootc/centos-bootc
 image-version: stream10

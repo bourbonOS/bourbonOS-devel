@@ -1,5 +1,5 @@
 ---
-name: stem-lambert-stable-devel
+name: stem-montmorency-devel
 description: BourbonOS hinging on a bash script. GNOME-STABLE edition.
 base-image: quay.io/fedora/fedora-bootc
 image-version: 42
