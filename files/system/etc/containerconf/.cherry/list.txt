@@ -2,7 +2,7 @@ arch
 alpine-edge
 debian-trixie
 debian-bookworm
-fedora-42
+fedora--latest
 opensuse-leap
 opensuse-tumbleweed
 ubuntu-jammy
