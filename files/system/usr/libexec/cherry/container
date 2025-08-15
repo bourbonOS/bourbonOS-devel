@@ -2,18 +2,18 @@
 
 readonly FILENAME_TMP=$(mktemp)
 
-branch-help() {
+help() {
     cat <<EOF
 Usage: cherry containeros [option]
 
 Options:
-  new                           create a new container
-  rm <container_name>           remove an existing container
-  save <container_name>         save the specified container to an image
-  load <image_path>             load a container from an image
-  switch <container_name>       switch to a different container
-  list                          list all containers
-  help                          show this dialogue
+    new                           create a new container
+    rm <container_name>           remove an existing container
+    save <container_name>         save the specified container to an image
+    load <image_path>             load a container from an image
+    switch <container_name>       switch to a different container
+    list                          list all containers
+    help                          show this dialogue
 EOF
 }
 
@@ -66,21 +66,20 @@ case "$1" in
     load)
         [[ ! -f "$2" ]] && echo "Error: Image path not found." && exit 1
         throbber --msg="Loading container image..." --cmd="podman load $2"
-        echo "Container loaded from $2. You can switch to it using 'cherry branch jump'."
+        echo "Container loaded from $2. You can switch to it using 'cherry container switch'."
         ;;
     switch)
         containers=$(distrobox-list | awk '{print $3}' | grep -v -e '^NAME$' -e '^cherry-cli$')
         [[ -z $containers ]] && echo "No containers to switch to." && exit 1
         echo "Select a container by its number to switch to it."
         select container in $containers; do
-            [[ -n $container ]] && export CONTAINER="$container"
+            [[ -n $container ]] && echo "Switching to $container..." && distrobox-enter "$container"
         done
-        echo "Switched to container "$CONTAINER"."
         ;;
     list) 
         distrobox-list | awk '{print $3}' | grep -v -e '^NAME$' -e '^cherry-cli$' 
         ;;
     help | *) 
-        branch-help 
+        help 
         ;;
 esac

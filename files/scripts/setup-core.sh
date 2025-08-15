@@ -14,21 +14,11 @@ chmod 700 /etc/transit/transit-id
 
 # Compile stuff
 
-dnf -y install make cargo rust gcc pam-devel
+dnf -y install make gcc pam-devel
 
 cd /Transit
 make
 make install
 rm -rf /Transit
-cd /ctsh
-cargo build --release
-install -Dm755 ./target/release/ctsh /usr/bin
-rm -rf /ctsh
-cd /
 
-dnf -y remove make cargo rust gcc pam-devel
-
-# Setup subsystem user
-
-groupadd -r -g 173 bourbon-subsys
-useradd -r -u 173 -g 173 -s /sbin/nologin -m -c "User for subsystem" bourbon-subsys
+dnf -y remove make gcc pam-devel

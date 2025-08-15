@@ -17,15 +17,15 @@ $(ostree admin status)
 EOF
 }
 
-stem-help() {
+help() {
     cat <<EOF
 Usage: cherry baseos [option]
 
 Options:
-  exec                          run a command on the host system
-  upgrade                       upgrade the host system and related utils
-  status                        show the status of the host system
-  help                          show this dialogue
+    exec                          run a command on the host system
+    upgrade                       upgrade the host system and related utilities
+    status                        show the status of the host system
+    help                          show this dialogue
 EOF
 }
 
@@ -33,5 +33,5 @@ case "$1" in
     exec) shift; $@ ;;
     upgrade) clear; echo "Please authorize to start your system upgrade."; pkexec /usr/libexec/ostools/update --interactive ;;
     status) status ;;
-    help | *) stem-help ;;
+    help | *) help ;;
 esac

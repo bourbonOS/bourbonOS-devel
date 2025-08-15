@@ -1,7 +1,9 @@
 arch
-alpine
-fedora
-ubuntu
-debian
+alpine-edge
+debian-trixie
+debian-bookworm
+fedora-42
 opensuse-leap
 opensuse-tumbleweed
+ubuntu-jammy
+ubuntu-noble

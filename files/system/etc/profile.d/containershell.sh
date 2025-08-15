@@ -15,7 +15,7 @@ cshell() {
         mkdir -p $HOME/.config/containerconf
     fi
     printf "Starting your shell...\n\n"
-    exec /usr/bin/ctsh
+    distrobox-assemble create --file /etc/containerconf/.cherry/cherry.ini
 }
 
 
@@ -25,9 +25,7 @@ if [[ -d /var/home/$USER ]]; then
     elif [[ "$TERM" == "linux" ]]; then
         printf "Would you like to enter host-shell mode?\n\n"
         read -p "[ y/n ]: " debug_ask
-        if [[ "$debug_ask" == "y" ]]; then
-            exec /usr/bin/ctsh --host
-        else
+        if [[ "$debug_ask" == "n" ]]; then
             cshell
         fi
     fi
