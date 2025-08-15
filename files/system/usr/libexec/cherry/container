@@ -7,7 +7,7 @@ help() {
 Usage: cherry containeros [option]
 
 Options:
-    new                           create a new container
+    create                        create a new container
     rm <container_name>           remove an existing container
     save <container_name>         save the specified container to an image
     load <image_path>             load a container from an image
@@ -22,14 +22,14 @@ throbber() {
 }
 
 case "$1" in
-    new)
+    create)
         echo "Do you want to:"
         select container in "Choose from a list of images" "Specify your own (advanced)"; do
             case "$container" in
                 "Choose from a list of images")
-                    echo "Select an image from the list:"
+                    echo "Select a container image from the list:"
                     select image $(cat /etc/containerconf/.cherry/list.txt); do
-                        [[ -n $image ]] && throbber --msg="Creating container..." --cmd="distrobox-assemble create --file /etc/containerconf/$image.ini" && echo "Done! You can switch to the container using 'cherry branch jump'." && exit 0
+                        [[ -n $image ]] && throbber --msg="Creating container $image..." --cmd="distrobox-assemble create --file /etc/containerconf/$image.ini" && echo "Done! You can switch to the container using 'cherry container switch'." && exit 0
                     done
                     ;;
                 "Specify your own (advanced)")
