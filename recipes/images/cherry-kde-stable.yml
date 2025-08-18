@@ -9,7 +9,6 @@ modules:
   - from-file: ingredients/common/scripts.yml
   - from-file: ingredients/common/services.yml
   - from-file: ingredients/common/packages.yml
-  - from-file: ingredients/common/core-sys.yml
   - from-file: ingredients/desktop/kde-de.yml
   - from-file: ingredients/desktop/kde-apps.yml
   - type: signing
