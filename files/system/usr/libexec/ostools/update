@@ -48,7 +48,6 @@ if $no_interact; then
             echo "$current_time" > "$last_run_file"
             set -oue pipefail
             bootc upgrade
-            subsys pull --force
             flatpak upgrade --system
             for USER in /var/home/*; do su - "$USER" -c "flatpak upgrade --user"; done
             nix-channel --update
@@ -74,7 +73,6 @@ elif ! $no_interact; then
     echo "Press CTRL+C to cancel."
     sleep 3
     throbber --msg="Task: Update system" --cmd="bootc upgrade"
-    throbber --msg="Task: Update subsystem" --cmd="subsys pull --force"
     throbber --msg="Task: Update system flatpaks" --cmd="flatpak upgrade --system"
     for USER in /var/home/*; do
         throbber --msg="Task: Update user flatpaks for $USER" --cmd="su - \"$USER\" -c \"flatpak upgrade --user\""
