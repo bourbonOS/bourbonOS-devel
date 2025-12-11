@@ -21,5 +21,3 @@ remove:
     - toolbox
     - sudo
     - sudo-python-plugin
-    - PackageKit
-    - PackageKit-command-not-found
