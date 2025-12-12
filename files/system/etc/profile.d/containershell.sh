@@ -8,7 +8,7 @@ cshell() {
         if ! getent group wheel > /dev/null; then
             echo "Hello there! Welcome to bourbonOS!"
             echo "We need to do some post-setup for you to access your shell."
-            echo "You will be asked for your password in a few seconds. Be ready!"
+            echo "Please authorize this action."
             sleep 3
             pkexec /usr/libexec/ostools/remove-wheel
         fi

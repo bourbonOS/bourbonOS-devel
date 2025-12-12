@@ -3,8 +3,4 @@ system:
   enabled:
     - nix-daemon.socket
     - init-core.service
-    - transit-id.service
     - sysupdate.timer
-user:
-  enabled:
-    - transit-backup.timer

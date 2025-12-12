@@ -12,5 +12,5 @@ elif [[ -d /var/usrlocal/transit/varhome/"$USER"/Desktop ]]; then
     echo "Changes not applied yet."
     echo "Log out and back in to apply changes."
 else
-    echo "No issues found. Abort."
+    echo "No issues found."
 fi

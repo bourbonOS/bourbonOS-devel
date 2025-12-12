@@ -7,6 +7,9 @@ install:
   packages:
     - atuin
     - distrobox
+    - apx
+    - apx-gui
+    - apx-conf
     - chromium
     - unzip
     - alsa-sof-firmware
@@ -19,5 +22,3 @@ install:
 remove:
   packages:
     - toolbox
-    - sudo
-    - sudo-python-plugin

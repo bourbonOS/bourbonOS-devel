@@ -4,8 +4,8 @@ set -euo pipefail
 
 if getent group wheel > /dev/null 2>&1; then
     echo "Please set your root password."
-    echo "Be careful to not lose this password, otherwise"
-    echo "you will lose root access entirely."
+    echo "BE CAREFUL to not lose this password."
+    echo "Otherwise, root access will be lost entirely."
     sleep 1
     passwd root
     users=$(grep "^wheel:" /etc/group | cut -d':' -f4)

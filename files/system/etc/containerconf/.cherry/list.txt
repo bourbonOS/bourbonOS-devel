@@ -1,9 +1,0 @@
-arch
-alpine-edge
-debian-trixie
-debian-bookworm
-fedora--latest
-opensuse-leap
-opensuse-tumbleweed
-ubuntu-jammy
-ubuntu-noble
