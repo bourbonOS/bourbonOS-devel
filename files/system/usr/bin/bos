@@ -3,16 +3,12 @@
 set -euo pipefail
 source "$HOME"/.bkconf/bk.conf
 
-readonly rflags="-r /var/home/backups --password-file $HOME/.bkconf/pass.key"
-
 status() {
-    local TRANSIT_STATUS="NOT_MOUNTED"
     if [[ $* == *--no-truncate* ]]; then
         local sys_cmdline=$(cat /proc/cmdline | sed -E 's/(ostree=)[^ ]+/\1.../' | sed -E 's/(BOOT_IMAGE=)[^ ]+/\1.../' | sed -E 's/(uuid=)[^ ]+/\1.../' | sed -E 's/(luks_uuid=)[^ ]+/\1.../')
     else
         local sys_cmdline=$(cat /proc/cmdline)
     fi
-    [[ -f /etc/transit/transit-status ]] && TRANSIT_STATUS=$(cat /etc/transit/transit-status)
     cat <<EOF
 bourbonOS $(cat /etc/bourbonOS_version)
 =======================
@@ -32,27 +28,9 @@ bos (option) [flag]
 Options:
     help                        show this dialogue
     version                     show program version
-    backup                      manage backups for user "$USER" 
     exec                        execute command on your base system
     upgrade                     upgrade base system software/utilities
     status [--no-truncate]      view base system status
-EOF
-}
-
-bkhelp() {
-    cat <<EOF
-Usage: bos backup (option) <parameter>
-
-Options:
-    help                        show this dialogue
-    run                         run a backup of your data
-    show <snapshot-id>          show contents of a specified data snapshot
-    config                      modify data backup configuration
-    diff <id1> <id2>            differentiate two specified data snapshots
-    stat                        repository statistics
-    list                        list all data snapshots
-    restore <snapshot-id>       restore a snapshot
-    check                       verify repository integrity
 EOF
 }
 
@@ -76,50 +54,4 @@ case $1 in
         shift
         status "$@"
         ;;
-    backup)
-        shift
-        case "$1" in
-            push)
-                restic $rflags backup "$HOME" $exclude
-                ;;
-            show)
-                if [[ -z $2 ]]; then
-                    echo "No snapshot specified."
-                    echo "Search for a snapshot to use with 'cherry backup list'."
-                else
-                    restic $rflags ls "$2"
-                fi
-                ;;
-            config)
-                nano "$HOME"/.bkconf/bk.conf
-                echo "Changes applied."
-                ;;
-            diff)
-                if [[ -z $2 || -z $3 ]]; then
-                    echo "Insufficient arguments provided."
-                    echo "Search for snapshots to diff with 'cherry backup list'."
-                else
-                    restic $rflags diff "$2" "$3"
-                fi
-                ;;
-            stat)
-                restic $rflags stats --human-readable
-                ;;
-            list)
-                restic $rflags snapshots
-                ;;
-            restore)
-                if [[ -z $2 ]]; then
-                    echo "No snapshot specified."
-                    echo "Search for a snapshot to restore with 'cherry backup list'."
-                else
-                    restic $rflags restore $2 --target "$HOME"
-                fi
-                ;;
-            verify)
-                restic $rflags check
-                ;;
-            help | *)
-                bkhelp
-                ;;
-        esac
+esac
