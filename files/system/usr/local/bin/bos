@@ -1,7 +1,6 @@
 #!/bin/bash
 
 set -euo pipefail
-source "$HOME"/.bkconf/bk.conf
 
 status() {
     if [[ $* == *--no-truncate* ]]; then
@@ -23,14 +22,16 @@ EOF
 
 help() {
     cat <<EOF
-bos (option) [flag]
+bos utility v0.6.0
 
 Options:
-    help                        show this dialogue
-    version                     show program version
-    exec                        execute command on your base system
-    upgrade                     upgrade base system software/utilities
-    status [--no-truncate]      view base system status
+    help                            show this dialogue
+    version                         show program version
+    exec <command>                  execute a command on your base system
+    distrobox                       manage containers with distrobox
+    bootc                           manage base system with bootc
+    update                          update base system software/utilities
+    status [--no-truncate]          view base system status/vital info
 EOF
 }
 
@@ -39,13 +40,21 @@ case $1 in
         help
         ;;
     version)
-        echo "v0.2.0"
+        echo "bos utility v0.6.0"
         ;;
     exec)
         shift
-        $@
+        bash -c "$@"
         ;;
-    upgrade)
+    distrobox)
+        shift
+        bash -c "distrobox $@"
+        ;;
+    bootc)
+        shift
+        bash -c "bootc $@"
+        ;;
+    update)
         clear
         echo "Please authorize this action with your root password."
         pkexec /usr/libexec/ostools/update --interactive
@@ -53,5 +62,9 @@ case $1 in
     status)
         shift
         status "$@"
+        ;;
+    *)
+        echo "Invalid argument"
+        help
         ;;
 esac
