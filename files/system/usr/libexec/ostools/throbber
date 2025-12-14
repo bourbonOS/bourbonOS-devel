@@ -1,6 +1,6 @@
 #!/bin/bash
 
-SPINNER=('-' '\\' '|' '/')
+SPINNER=(' - ' ' \\ ' ' | ' ' / ')
 BLUE="\033[34m"
 YELLOW="\033[33m"
 GREEN="\033[32m"
@@ -12,7 +12,7 @@ spin() {
     local color="$2"
     while :; do
         for i in "${SPINNER[@]}"; do
-            echo -ne "\r${BLUE}[${RESET} ${color}${i}${RESET} ${BLUE}]${RESET} $message"
+            echo -ne "\r${YELLOW}[${RESET} ${color}${i}${RESET} ${YELLOW}]${RESET} $message"
             sleep 0.12
         done
     done
@@ -55,15 +55,15 @@ kill "$SPIN_PID" > /dev/null 2>&1
 wait "$SPIN_PID" 2>/dev/null
 
 if [ $CMD_EXIT_CODE -eq 0 ]; then
-    echo -ne "\r${BLUE}[${RESET} ${GREEN}Done${RESET} ${BLUE}]${RESET} $MSG\n"
+    echo -ne "\r${GREEN}[${RESET} ${GREEN}DONE${RESET} ${GREEN}]${RESET} $MSG\n"
 else
     ERROR_MSG=$(cat "$ERROR_FILE")
     if [ -z "$ERROR_MSG" ]; then
-        ERROR_MSG="Error: command failed"
+        ERROR_MSG="Process exited with non-zero code $CMD_EXIT_CODE"
     else
-        ERROR_MSG="Error: ${ERROR_MSG}"
+        ERROR_MSG="${ERROR_MSG}"
     fi
-    echo -ne "\r${BLUE}[${RESET} ${RED}Failed${RESET} ${BLUE}]${RESET} $ERROR_MSG\n"
+    echo -ne "\r${RED}[${RESET} ${RED}ERR${RESET} ${RED}]${RESET} $ERROR_MSG\n"
 fi
 
 rm -f "$ERROR_FILE"
