@@ -1,0 +1,4 @@
+{
+  "name": "bourbonOS-devel",
+  "image": "mcr.microsoft.com/vscode/devcontainers/base:fedora-42"
+}
