@@ -10,12 +10,8 @@ install:
     - apx
     - apx-gui
     - apx-conf
-    - chromium
+    - firefox
     - unzip
-    - alsa-sof-firmware
-    - iwlwifi-mvm-firmware
-    - iwlwifi-dvm-firmware
-    - iwlegacy-firmware
     - plymouth 
     - plymouth-theme-spinner
     - pamtester

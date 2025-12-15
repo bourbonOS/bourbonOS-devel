@@ -7,7 +7,7 @@ BindsTo=var.mount nix.mount
 
 [Service]
 Type=oneshot
-ExecStart=/usr/libexec/ostools/init-core
+ExecStart=/usr/libexec/ostools/init-nix
 ExecStartPost=/usr/bin/systemctl disable init-core.service
 
 [Install]

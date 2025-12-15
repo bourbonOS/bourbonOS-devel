@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -e
+set -euo pipefail
 
 CONTAINER_NAME=default
 IMAGE_FILE=/usr/local/share/container/default.container

@@ -24,14 +24,25 @@ help() {
     cat <<EOF
 bos utility v0.6.0
 
-Options:
-    help                            show this dialogue
-    version                         show program version
+options:
+    help                            show this message
     exec <command>                  execute a command on your base system
-    apx                             manage containers with apx
-    bootc                           manage base system with bootc
+    tlbx                            command wrappers for various preinstalled utilities
     update                          update base system software/utilities
     status [--no-truncate]          view base system status/vital info
+EOF
+}
+
+tlbx-help() {
+    cat <<EOF
+bos toolbox v0.1.0
+
+options:
+    help                            show this message
+    apx <args>                      container management tool
+    restic <args>                   data backup management tool
+    bootc [--root] <args>           base system management tool
+    systemctl [--root] <args>       init system management tool
 EOF
 }
 
@@ -39,24 +50,46 @@ case $1 in
     help)
         help
         ;;
-    version)
-        echo "bos utility v0.6.0"
-        ;;
     exec)
         shift
         bash -c "$@"
         ;;
-    distrobox)
+    tlbx)
         shift
-        bash -c "apx $@"
-        ;;
-    bootc)
-        shift
-        bash -c "bootc $@"
+        case $1 in
+            help)
+                tlbx-help
+                ;;
+            apx)
+                shift
+                bash -c "apx $@"
+                ;;
+            restic)
+                shift
+                bash -c "restic $@"
+                ;;
+            bootc)
+                shift
+                if [[ "$1" == "--root" ]]; then
+                    pkexec bash -c "bootc $@"
+                else 
+                    bash -c "bootc $@"
+                fi
+                ;;
+            systemctl)
+                shift
+                if [[ "$1" == "--root" ]]; then
+                    pkexec bash -c "systemctl $@"
+                else
+                    bash -c "systemctl $@"
+                fi
+                ;;
+            *)
+                tlbx-help
+                ;;
         ;;
     update)
         clear
-        echo "Please authorize this action with your root password."
         pkexec /usr/libexec/ostools/update --interactive
         ;;
     status)
