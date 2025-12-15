@@ -14,8 +14,7 @@ cshell() {
         fi
         mkdir -p $HOME/.config/containerconf
     fi
-    printf "Starting your shell...\n\n"
-    distrobox-assemble create --file /etc/containerconf/.cherry/cherry.ini
+    enter-subsystem
 }
 
 

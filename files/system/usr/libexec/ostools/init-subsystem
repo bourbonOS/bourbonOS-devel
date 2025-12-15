@@ -1,0 +1,14 @@
+#!/bin/bash
+
+set -e
+
+CONTAINER_NAME=default
+IMAGE_FILE=/usr/local/share/container/default.container
+
+if ! podman container exists $CONTAINER_NAME; then
+  LOAD_OUTPUT=$(podman load < $IMAGE_FILE)
+  IMAGE=$(echo "$LOAD_OUTPUT" | grep -o 'localhost/[^:]*:[^ ]*')
+  podman create --name $CONTAINER_NAME -v /var/home:/home:Z $IMAGE
+fi
+
+podman start $CONTAINER_NAME

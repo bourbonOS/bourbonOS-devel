@@ -1,0 +1,12 @@
+[Unit]
+Description=Initialize subsystem
+After=var.mount
+BindsTo=var.mount
+
+[Service]
+User=subsys
+Type=oneshot
+ExecStart=/usr/libexec/ostools/init-container
+
+[Install]
+WantedBy=multi-user.target

@@ -3,4 +3,5 @@ system:
   enabled:
     - nix-daemon.socket
     - init-core.service
+    - container-init.service
     - sysupdate.timer
