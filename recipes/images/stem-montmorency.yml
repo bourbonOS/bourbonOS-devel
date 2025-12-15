@@ -7,8 +7,8 @@ image-version: 43
 modules:
   - from-file: ingredients/common/files.yml
   - from-file: ingredients/common/scripts.yml
-  - from-file: ingredients/common/services.yml
   - from-file: ingredients/common/packages.yml
+  - from-file: ingredients/common/services.yml
   - from-file: ingredients/desktop/gnome-de.yml
   - from-file: ingredients/desktop/gnome-apps.yml
   - type: signing

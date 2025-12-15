@@ -28,7 +28,7 @@ Options:
     help                            show this dialogue
     version                         show program version
     exec <command>                  execute a command on your base system
-    distrobox                       manage containers with distrobox
+    apx                             manage containers with apx
     bootc                           manage base system with bootc
     update                          update base system software/utilities
     status [--no-truncate]          view base system status/vital info
@@ -48,7 +48,7 @@ case $1 in
         ;;
     distrobox)
         shift
-        bash -c "distrobox $@"
+        bash -c "apx $@"
         ;;
     bootc)
         shift
