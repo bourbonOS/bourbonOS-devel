@@ -2,6 +2,6 @@ type: systemd
 system:
   enabled:
     - nix-daemon.socket
-    - init-core.service
+    - init-nix.service
     - init-subsystem.service
     - sysupdate.timer
