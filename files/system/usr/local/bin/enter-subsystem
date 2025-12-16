@@ -1,3 +1,3 @@
 #!/bin/bash
 
-pkexec --user subsys podman exec --user $(id -u) -it default /bin/bash
+pkexec --user subsys podman exec --user "$(id -u)" -it default /bin/bash
