@@ -2,12 +2,9 @@
 
 set -euo pipefail
 
-IMAGE_FILE=/usr/local/share/containers/default.container
-
-if ! podman container exists $CONTAINER_NAME; then
-  LOAD_OUTPUT=$(podman load < $IMAGE_FILE)
-  IMAGE=$(echo "$LOAD_OUTPUT" | grep -o 'localhost/[^:]*:[^ ]*')
-  podman create --name subsystem -v /var/home:/home:Z $IMAGE
+if ! podman container exists subsystem; then
+	podman load -i /usr/local/share/containers/default.container
+	podman create --name subsystem -v /var/home:/home:Z /usr/local/bin/bos:/usr/local/bin/bos:Z 
 fi
 
 podman start subsystem

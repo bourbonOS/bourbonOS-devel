@@ -1,5 +1,4 @@
 type: script
 scripts:
-  - install-nix.sh
   - setup-subsystem.sh
   - quirks.sh
