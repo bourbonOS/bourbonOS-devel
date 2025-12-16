@@ -6,7 +6,7 @@ BindsTo=var.mount
 [Service]
 User=subsys
 Type=oneshot
-ExecStart=/usr/libexec/ostools/init-container
+ExecStart=/usr/libexec/ostools/init-subsystem
 
 [Install]
 WantedBy=multi-user.target
