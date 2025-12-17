@@ -50,7 +50,7 @@ case $1 in
         ;;
     exec)
         shift
-        bash -c "$@"
+        $@
         ;;
     tlbx)
         shift
@@ -60,26 +60,26 @@ case $1 in
                 ;;
             apx)
                 shift
-                bash -c "apx $@"
+                apx $@
                 ;;
             restic)
                 shift
-                bash -c "restic $@"
+                restic $@
                 ;;
             bootc)
                 shift
                 if [[ "$1" == "--root" ]]; then
-                    pkexec bash -c "bootc $@"
+                    pkexec bootc $@
                 else 
-                    bash -c "bootc $@"
+                    bootc $@
                 fi
                 ;;
             systemctl)
                 shift
                 if [[ "$1" == "--root" ]]; then
-                    pkexec bash -c "systemctl $@"
+                    pkexec systemctl $@
                 else
-                    bash -c "systemctl $@"
+                    systemctl $@
                 fi
                 ;;
             *)

@@ -14,7 +14,7 @@ cshell() {
         fi
         mkdir -p $HOME/.config/containerconf
     fi
-    pkexec --user subsys subsys_user=$USER subsys_user_uid=$(id -u) subsys_user_gid=$(id -g) /usr/libexec/ostools/enter-subsystem
+    pkexec --user subsys bash -c "subsys_user=$USER subsys_user_uid=$(id -u) subsys_user_gid=$(id -g) /usr/libexec/ostools/enter-subsystem"
 }
 
 
