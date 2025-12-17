@@ -1,7 +1,5 @@
 #!/bin/bash
 
-set -euo pipefail
-
 status() {
     if [[ $* == *--no-truncate* ]]; then
         local sys_cmdline=$(cat /proc/cmdline | sed -E 's/(ostree=)[^ ]+/\1.../' | sed -E 's/(BOOT_IMAGE=)[^ ]+/\1.../' | sed -E 's/(uuid=)[^ ]+/\1.../' | sed -E 's/(luks_uuid=)[^ ]+/\1.../')
