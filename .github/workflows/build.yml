@@ -26,8 +26,10 @@ jobs:
       fail-fast: false 
       matrix:
         recipe:
-          - main/stem-lambert.yml
+          - main/stem-champagne.yml
+          - main/stem-hedelfingen.yml
           - main/stem-montmorency.yml
+          - main/stem-tartarian.yml
     steps:
       - name: Build baseOS
         uses: blue-build/github-action@v1.8

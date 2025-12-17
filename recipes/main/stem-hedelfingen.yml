@@ -1,7 +1,7 @@
 ---
-name: stem-montmorency-devel
-description: Fedora Silverblue with some spice.
-base-image: quay.io/fedora-ostree-desktops/silverblue
+name: stem-hedelfingen-devel
+description: Fedora Cosmic Atomic with some spice.
+base-image: quay.io/fedora-ostree-desktops/cosmic-atomic
 image-version: 43
 
 modules:
