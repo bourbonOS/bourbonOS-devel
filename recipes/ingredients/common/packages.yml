@@ -7,8 +7,6 @@ install:
   packages:
     - atuin
     - distrobox
-    - iwlwifi-mvm-firmware
-    - iwlwifi-dvm-firmware
     - firefox
     - unzip
     - plymouth 
