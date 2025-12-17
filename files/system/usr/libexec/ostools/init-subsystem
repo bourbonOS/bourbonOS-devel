@@ -6,7 +6,7 @@ mkdir -p /var/home/subsys
 
 if ! podman container exists subsystem; then
 	podman load -i /usr/local/share/containers/default.container
-	podman create --name subsystem -v /var/home:/home:Z /usr/local/bin/bos:/usr/local/bin/bos:Z  registry.fedoraproject.org/fedora:latest
+	podman create --name subsystem -v /var/home:/home:Z /usr/local/bin/bos:/usr/local/bin/bos:Z registry.fedoraproject.org/fedora:latest
 fi
 
 podman start subsystem
