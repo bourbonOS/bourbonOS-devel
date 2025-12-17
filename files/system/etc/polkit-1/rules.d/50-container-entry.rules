@@ -1,8 +1,0 @@
-polkit.addRule(function(action, subject) {
-    if (action.id == "org.freedesktop.policykit.exec" &&
-        action.lookup("command_line") &&
-        action.lookup("command_line").match(/^podman exec --user [0-9]+ -it subsystem \/bin\/bash$/) &&
-        action.lookup("user") == "subsys") {
-        return polkit.Result.YES;
-    }
-});

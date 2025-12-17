@@ -1,0 +1,6 @@
+polkit.addRule(function(action, subject) {
+    if (action.id == "org.freedesktop.policykit.exec" &&
+        action.lookup("command_line") == "/usr/libexec/ostools/enter-subsystem") {
+        return polkit.Result.YES;
+    }
+});

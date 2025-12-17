@@ -1,0 +1,3 @@
+#!/bin/bash
+
+podman exec -e PS1='\[\e[1m\][\[\e[0;92m\]\u\[\e[0m\]@\[\e[92m\]\H\[\e[0;1m\]]-[\[\e[0;96m\]\W\[\e[0;1m\]]\[\e[0m\]\\$ ' --user "$(id -u)" -it default /bin/bash

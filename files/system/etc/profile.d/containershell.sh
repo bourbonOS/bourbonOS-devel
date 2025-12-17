@@ -14,7 +14,7 @@ cshell() {
         fi
         mkdir -p $HOME/.config/containerconf
     fi
-    enter-subsystem
+    pkexec --user subsys /usr/libexec/ostools/enter-subsystem
 }
 
 

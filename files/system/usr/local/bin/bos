@@ -87,6 +87,7 @@ case $1 in
             *)
                 tlbx-help
                 ;;
+        esac
         ;;
     update)
         clear
