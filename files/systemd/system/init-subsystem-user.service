@@ -1,0 +1,11 @@
+[Unit]
+Description=Initialize subsystem user
+After=var.mount
+BindsTo=var.mount
+
+[Service]
+Type=oneshot
+ExecStart=/usr/libexec/ostools/init-subsystem-user
+
+[Install]
+WantedBy=multi-user.target

@@ -1,7 +1,7 @@
 [Unit]
 Description=Initialize subsystem
-After=var.mount
-BindsTo=var.mount
+After=init-subsystem-user.service
+BindsTo=init-subsystem-user.service
 
 [Service]
 User=subsys
