@@ -26,8 +26,6 @@ jobs:
       fail-fast: false 
       matrix:
         recipe:
-          - main/stem-chelan.yml
-          - main/stem-stella.yml
           - main/stem-lambert.yml
           - main/stem-montmorency.yml
     steps:

@@ -22,3 +22,4 @@ configurations:
       - page.tesk.Refine
       - com.github.tchx84.Flatseal
       - com.mattjakeman.ExtensionManager
+      - io.github.dvlv.boxbuddyrs

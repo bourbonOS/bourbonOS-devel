@@ -7,9 +7,10 @@ install:
   packages:
     - atuin
     - distrobox
-    - apx
-    - apx-gui
-    - apx-conf
+    - alsa-sof-firmware
+    - iwlwifi-mvm-firmware
+    - iwlwifi-dvm-firmware
+    - iwlegacy-firmware
     - firefox
     - unzip
     - plymouth 
