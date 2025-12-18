@@ -7,10 +7,6 @@ install:
   packages:
     - atuin
     - distrobox
-    - firefox
-    - unzip
-    - plymouth 
-    - plymouth-theme-spinner
 remove:
   packages:
     - toolbox
