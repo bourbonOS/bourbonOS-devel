@@ -1,6 +1,4 @@
 type: systemd
 system:
   enabled:
-    - init-subsystem-user.service
-    - init-subsystem.service
     - sysupdate.timer

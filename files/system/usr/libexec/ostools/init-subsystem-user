@@ -5,4 +5,4 @@ set -euo pipefail
 mkdir -p /var/home/subsys
 mkdir -p /var/home/subsys/.config
 
-chown subsys:subsys /var/home/subsys{,/.config}
+chown -R subsys:subsys /var/home/subsys
