@@ -2,9 +2,15 @@
 
 set -euo pipefail
 
+echo "Starting shell..."
+
 if ! podman container exists subsystem; then
-	podman load -i /usr/share/containers/default.container
+	podman load -i /etc/containers/default.container
 	podman create --name subsystem -v /var/home:/home:Z /usr/bin/bos:/usr/bin/bos:Z registry.fedoraproject.org/fedora:latest
 fi
 
-podman start subsystem
+if [ "$(podman container inspect -f '{{.State.Running}}' subsystem 2>/dev/null)" == "true" ]; then
+	podman start subsystem
+fi
+
+exec podman exec -e PS1='\[\e[1m\][\[\e[0;92m\]\u\[\e[0m\]@\[\e[92m\]\H\[\e[0;1m\]]-[\[\e[0;96m\]\W\[\e[0;1m\]]\[\e[0m\]\\$ ' -it subsystem /bin/bash
