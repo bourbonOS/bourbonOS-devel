@@ -1,7 +1,7 @@
 ---
 name: stem-hedelfingen-devel
 description: Fedora Cosmic Atomic with some spice.
-base-image: quay.io/fedora-ostree-desktops/cosmic-atomic
+base-image: ghcr.io/ublue-os/cosmic-atomic-main
 image-version: 43
 
 modules:

@@ -1,7 +1,7 @@
 ---
 name: stem-montmorency-devel
 description: Fedora Silverblue with some spice.
-base-image: quay.io/fedora-ostree-desktops/silverblue
+base-image: ghcr.io/ublue-os/silverblue-main
 image-version: 43
 
 modules:

@@ -1,7 +1,7 @@
 ---
 name: stem-champagne-devel
 description: Fedora Budgie Atomic with some spice.
-base-image: quay.io/fedora-ostree-desktops/budgie-atomic
+base-image: ghcr.io/ublue-os/budgie-atomic-main
 image-version: 43
 
 modules:
