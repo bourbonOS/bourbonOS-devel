@@ -1,0 +1,6 @@
+type: systemd
+system:
+  enabled:
+    - sysupdate.timer
+    - gdm.service
+    - NetworkManager.service
