@@ -1,4 +1,4 @@
-name: Build bourbonOS Development variants
+name: Build Nirconium
 on:
   schedule:
     - cron:
@@ -16,7 +16,7 @@ concurrency:
   cancel-in-progress: true
 jobs:
   bluebuild:
-    name: Build bourbonOS Development
+    name: Build Nirconium
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -28,7 +28,7 @@ jobs:
         recipe:
           - main/nirconium.yml
     steps:
-      - name: Build baseOS
+      - name: Build image
         uses: blue-build/github-action@v1.8
         with:
           recipe: ${{ matrix.recipe }}
