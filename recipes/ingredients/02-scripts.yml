@@ -1,5 +1,5 @@
 type: script
 scripts:
   - setup-subsystem.sh
-  - end4dots.sh
+  - gnome.sh
   - quirks.sh
