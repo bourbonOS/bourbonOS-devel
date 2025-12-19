@@ -2,11 +2,12 @@ type: dnf
 repos:
   copr:
     enable:
-      - chronos/main
+      - solopasha/hyprland
 install:
   packages:
-    - atuin
     - distrobox
+    - hyprland
+    - gdm
 remove:
   packages:
     - toolbox

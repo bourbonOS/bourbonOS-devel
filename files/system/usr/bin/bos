@@ -7,14 +7,14 @@ status() {
         local sys_cmdline=$(cat /proc/cmdline)
     fi
     cat <<EOF
-bourbonOS $(cat /etc/bourbonOS_version)
+nirconium $(cat /etc/nirconium_version)
 =======================
 host: $(hostname)
 kargs: "$sys_cmdline"
 kernver: $(uname -r)
 =======================
 system status:
-$(bootc status)
+$(pkexec bootc status)
 EOF
 }
 
